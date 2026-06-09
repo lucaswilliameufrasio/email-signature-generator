@@ -42,8 +42,14 @@
     }
     .lang-bar{
       display:flex;
-      justify-content:flex-end;
-      margin-bottom:10px;
+      align-items:center;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .lang-bar label{
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
     }
     .lang-bar select{
       font-size:12px;
@@ -186,29 +192,31 @@
 <body>
   <div class="wrap">
     <aside class="panel">
+      <h1 data-i18n="title">Gerador de assinatura</h1>
+
       <div class="lang-bar">
+        <label data-i18n="languageLabel">Idioma</label>
         <select id="langSelect">
           <option value="pt-BR">Português (BR)</option>
           <option value="en">English</option>
         </select>
       </div>
 
-      <h1 data-i18n="title">Gerador de assinatura</h1>
-
       <div class="group">
         <h3 data-i18n="dataGroup">Dados</h3>
         <div class="field">
           <label data-i18n="nameLabel">Nome</label>
-          <input id="nameInput" type="text" value="Nome Sobrenome" data-i18n-placeholder="namePlaceholder">
+          <input id="nameInput" type="text" value="Nome Sobrenome" data-i18n-placeholder="namePlaceholder" data-i18n-value="nameValue">
         </div>
         <div class="field">
           <label data-i18n="roleLabel">Cargo</label>
-          <input id="roleInput" type="text" value="Cargo ou área" data-i18n-placeholder="rolePlaceholder">
+          <input id="roleInput" type="text" value="Cargo ou área" data-i18n-placeholder="rolePlaceholder" data-i18n-value="roleValue">
         </div>
         <div class="field">
           <label data-i18n="phoneLabel">Telefone</label>
-          <input id="phoneInput" type="tel" value="(00) 0000-0000" data-i18n-placeholder="phonePlaceholder">
+          <input id="phoneInput" type="tel" value="+55 (00) 0000-0000" data-i18n-placeholder="phonePlaceholder" data-i18n-value="phoneValue">
         </div>
+        <label class="checkline"><input type="checkbox" id="showCountryCode" checked> <span data-i18n="showCountryCode">Mostrar código do país</span></label>
       </div>
 
       <div class="group">
@@ -341,7 +349,7 @@
     </aside>
 
     <section class="preview">
-      <table id="sigTable" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;min-width:900px;">
+      <table id="sigTable" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;">
         <tr>
           <td style="padding:18px 20px;">
             <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
@@ -382,7 +390,7 @@
                   <div id="dividerBar" style="width:2px;height:150px;background:#1f3b73;line-height:0;font-size:0;">&nbsp;</div>
                 </td>
 
-                <td valign="middle" style="min-width:420px;">
+                <td valign="middle">
                   <div id="nameEl" style="font-size:46px;line-height:1;font-weight:800;color:#1f3b73;letter-spacing:-0.3px;">Nome Sobrenome</div>
                   <div id="roleEl" style="font-size:22px;line-height:1.25;color:#1f3b73;padding-top:10px;">Cargo ou área</div>
                   <div id="phoneEl" style="font-size:22px;line-height:1.2;color:#1f3b73;padding-top:6px;">Telefone: (00) 0000-0000</div>
@@ -400,6 +408,11 @@
 
     const translations = {
       "pt-BR": {
+        languageLabel: "Idioma",
+        nameValue: "Nome Sobrenome",
+        roleValue: "Cargo ou área",
+        phoneValue: "+55 (00) 0000-0000",
+        showCountryCode: "Mostrar código do país",
         title: "Gerador de assinatura",
         paletteCorporate: "Corporativo",
         paletteDark: "Escuro",
@@ -455,6 +468,11 @@
         statusHtmlDownloaded: "HTML baixado."
       },
       "en": {
+        languageLabel: "Language",
+        nameValue: "John Doe",
+        roleValue: "Role or Department",
+        phoneValue: "+1 (555) 000-0000",
+        showCountryCode: "Show country code",
         title: "Signature Generator",
         paletteCorporate: "Corporate",
         paletteDark: "Dark",
@@ -516,6 +534,8 @@
     const roleInput = document.getElementById("roleInput");
     const phoneInput = document.getElementById("phoneInput");
     const fontFamilyInput = document.getElementById("fontFamilyInput");
+    const dirtyFields = new Set();
+    const showCountryCodeCheckbox = document.getElementById("showCountryCode");
 
     const showMainLogoCheckbox = document.getElementById("showMainLogo");
     const showSideLogoCheckbox = document.getElementById("showSideLogo");
@@ -616,6 +636,17 @@
         }
       }
 
+      const valueElements = document.querySelectorAll("[data-i18n-value]");
+      for (const element of valueElements) {
+        if (dirtyFields.has(element.id)) {
+          continue;
+        }
+        const key = element.getAttribute("data-i18n-value");
+        if (text[key] !== undefined) {
+          element.value = text[key];
+        }
+      }
+
       applyText();
       buildPalettes();
     }
@@ -665,7 +696,11 @@
       const prefix = translations[language].phonePrefix;
       nameEl.textContent = nameInput.value || "";
       roleEl.textContent = roleInput.value || "";
-      phoneEl.textContent = `${prefix}${phoneInput.value || ""}`;
+      let phoneText = phoneInput.value || "";
+      if (!showCountryCodeCheckbox.checked) {
+        phoneText = phoneText.replace(/^\+?\d+\s*/, "");
+      }
+      phoneEl.textContent = `${prefix}${phoneText}`;
     }
 
     function applyFont() {
@@ -956,13 +991,15 @@ ${clone.outerHTML}
     }
 
     function resetAll() {
+      dirtyFields.clear();
       nameInput.value = "Nome Sobrenome";
       roleInput.value = "Cargo ou área";
-      phoneInput.value = "(00) 0000-0000";
+      phoneInput.value = "+55 (00) 0000-0000";
       fontFamilyInput.value = "Arial,Helvetica,sans-serif";
 
       showMainLogoCheckbox.checked = true;
       showSideLogoCheckbox.checked = false;
+      showCountryCodeCheckbox.checked = true;
       logoLayoutInput.value = "horizontal";
       mainLogoWidthInput.value = 260;
       sideLogoWidthInput.value = 120;
@@ -988,7 +1025,10 @@ ${clone.outerHTML}
     }
 
     for (const element of [nameInput, roleInput, phoneInput]) {
-      element.addEventListener("input", applyText);
+      element.addEventListener("input", function () {
+        dirtyFields.add(element.id);
+        applyText();
+      });
     }
     fontFamilyInput.addEventListener("change", applyFont);
     for (const element of [textColorInput, dividerColorInput, accentColorInput, bgColorInput]) {
@@ -997,6 +1037,7 @@ ${clone.outerHTML}
     for (const element of [showMainLogoCheckbox, showSideLogoCheckbox]) {
       element.addEventListener("change", applyLogosVisibilityAndLayout);
     }
+    showCountryCodeCheckbox.addEventListener("change", applyText);
     logoLayoutInput.addEventListener("change", applyLogosVisibilityAndLayout);
     mainLogoWidthInput.addEventListener("input", applyLogoSizes);
     sideLogoWidthInput.addEventListener("input", applyLogoSizes);

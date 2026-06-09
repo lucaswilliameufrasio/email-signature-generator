@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gerador de Assinatura de E-mail</title>
+  <title data-i18n="title">Gerador de Assinatura de E-mail</title>
   <style>
     :root{
       --panel:#ffffff;
@@ -37,7 +37,21 @@
       border:1px solid var(--line);
       border-radius:12px;
       padding:16px;
+      min-width:0;
       overflow:auto;
+    }
+    .lang-bar{
+      display:flex;
+      justify-content:flex-end;
+      margin-bottom:10px;
+    }
+    .lang-bar select{
+      font-size:12px;
+      padding:4px 8px;
+      border:1px solid var(--line);
+      border-radius:6px;
+      background:var(--panel);
+      cursor:pointer;
     }
     h1{
       margin:0 0 12px;
@@ -172,28 +186,35 @@
 <body>
   <div class="wrap">
     <aside class="panel">
-      <h1>Gerador de assinatura</h1>
+      <div class="lang-bar">
+        <select id="langSelect">
+          <option value="pt-BR">Português (BR)</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <h1 data-i18n="title">Gerador de assinatura</h1>
 
       <div class="group">
-        <h3>Dados</h3>
+        <h3 data-i18n="dataGroup">Dados</h3>
         <div class="field">
-          <label>Nome</label>
-          <input id="nameInput" type="text" value="Nome Sobrenome">
+          <label data-i18n="nameLabel">Nome</label>
+          <input id="nameInput" type="text" value="Nome Sobrenome" data-i18n-placeholder="namePlaceholder">
         </div>
         <div class="field">
-          <label>Cargo</label>
-          <input id="roleInput" type="text" value="Cargo ou área">
+          <label data-i18n="roleLabel">Cargo</label>
+          <input id="roleInput" type="text" value="Cargo ou área" data-i18n-placeholder="rolePlaceholder">
         </div>
         <div class="field">
-          <label>Telefone</label>
-          <input id="phoneInput" type="tel" value="(00) 0000-0000">
+          <label data-i18n="phoneLabel">Telefone</label>
+          <input id="phoneInput" type="tel" value="(00) 0000-0000" data-i18n-placeholder="phonePlaceholder">
         </div>
       </div>
 
       <div class="group">
-        <h3>Fonte</h3>
+        <h3 data-i18n="fontGroup">Fonte</h3>
         <div class="field">
-          <label>Família da fonte</label>
+          <label data-i18n="fontFamilyLabel">Família da fonte</label>
           <select id="fontFamilyInput">
             <option value="Arial,Helvetica,sans-serif">Arial</option>
             <option value="'Trebuchet MS',Arial,sans-serif">Trebuchet MS</option>
@@ -207,96 +228,96 @@
       </div>
 
       <div class="group">
-        <h3>Logos</h3>
+        <h3 data-i18n="logosGroup">Logos</h3>
 
         <div class="row2">
-          <label class="checkline"><input type="checkbox" id="showMainLogo" checked> Mostrar logo principal</label>
-          <label class="checkline"><input type="checkbox" id="showSideLogo"> Mostrar logo secundária</label>
+          <label class="checkline"><input type="checkbox" id="showMainLogo"> <span data-i18n="showMainLogoCheck">Mostrar logo principal</span></label>
+          <label class="checkline"><input type="checkbox" id="showSideLogo"> <span data-i18n="showSideLogoCheck">Mostrar logo secundária</span></label>
         </div>
 
         <div class="field">
-          <label>Posicionamento das logos</label>
+          <label data-i18n="logoLayoutLabel">Posicionamento das logos</label>
           <select id="logoLayoutInput">
-            <option value="horizontal">Lado a lado</option>
-            <option value="vertical">Empilhadas</option>
+            <option value="horizontal" data-i18n-opt="logoLayoutHorizontal">Lado a lado</option>
+            <option value="vertical" data-i18n-opt="logoLayoutVertical">Empilhadas</option>
           </select>
         </div>
 
         <div class="row2">
           <div class="field">
-            <label>Largura logo principal: <span id="mainSizeLabel">260px</span></label>
+            <label data-i18n="mainLogoWidth">Largura logo principal: <span id="mainSizeLabel">260px</span></label>
             <input id="mainLogoWidthInput" type="range" min="60" max="520" step="5" value="260">
           </div>
           <div class="field">
-            <label>Largura logo secundária: <span id="sideSizeLabel">120px</span></label>
+            <label data-i18n="sideLogoWidth">Largura logo secundária: <span id="sideSizeLabel">120px</span></label>
             <input id="sideLogoWidthInput" type="range" min="40" max="300" step="5" value="120">
           </div>
         </div>
 
         <div class="field">
-          <label>Logo principal</label>
+          <label data-i18n="mainLogoLabel">Logo principal</label>
           <div id="mainDrop" class="dropzone">
-            <strong>Arraste e solte a imagem aqui</strong>
-            ou selecione um arquivo:
+            <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
+            <span data-i18n="dropzoneOr">ou selecione um arquivo:</span>
             <input id="mainLogoInput" type="file" accept="image/*">
           </div>
         </div>
 
         <div class="field">
-          <label>Logo secundária</label>
+          <label data-i18n="sideLogoLabel">Logo secundária</label>
           <div id="sideDrop" class="dropzone">
-            <strong>Arraste e solte a imagem aqui</strong>
-            ou selecione um arquivo:
+            <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
+            <span data-i18n="dropzoneOr">ou selecione um arquivo:</span>
             <input id="sideLogoInput" type="file" accept="image/*">
           </div>
         </div>
       </div>
 
       <div class="group">
-        <h3>Cores</h3>
+        <h3 data-i18n="colorsGroup">Cores</h3>
 
         <div class="field">
-          <label>Paletas</label>
+          <label data-i18n="palettesLabel">Paletas</label>
           <div class="palette-grid" id="paletteGrid"></div>
         </div>
 
         <div class="row2">
           <div class="field">
-            <label>Cor do texto</label>
+            <label data-i18n="textColorLabel">Cor do texto</label>
             <input id="textColorInput" type="color" value="#1f3b73">
           </div>
           <div class="field">
-            <label>Cor do divisor</label>
+            <label data-i18n="dividerColorLabel">Cor do divisor</label>
             <input id="dividerColorInput" type="color" value="#1f3b73">
           </div>
         </div>
 
         <div class="row2">
           <div class="field">
-            <label>Cor de destaque</label>
+            <label data-i18n="accentColorLabel">Cor de destaque</label>
             <input id="accentColorInput" type="color" value="#37b37e">
           </div>
           <div class="field">
-            <label>Cor de fundo</label>
+            <label data-i18n="bgColorLabel">Cor de fundo</label>
             <input id="bgColorInput" type="color" value="#f3f4f6">
           </div>
         </div>
       </div>
 
       <div class="group">
-        <h3>Exportação</h3>
+        <h3 data-i18n="exportGroup">Exportação</h3>
 
         <div class="row2">
           <div class="field">
-            <label>Formato</label>
+            <label data-i18n="formatLabel">Formato</label>
             <select id="exportFormatInput">
-              <option value="png">PNG</option>
-              <option value="jpeg">JPG</option>
-              <option value="svg">SVG</option>
+              <option value="png" data-i18n-opt="optionPng">PNG</option>
+              <option value="jpeg" data-i18n-opt="optionJpg">JPG</option>
+              <option value="svg" data-i18n-opt="optionSvg">SVG</option>
             </select>
           </div>
           <div class="field">
-            <label>Escala / resolução</label>
+            <label data-i18n="scaleLabel">Escala / resolução</label>
             <select id="exportScaleInput">
               <option value="1">1x</option>
               <option value="2" selected>2x</option>
@@ -306,14 +327,14 @@
         </div>
 
         <div class="btns">
-          <button id="downloadImageBtn" class="primary">Baixar imagem</button>
-          <button id="downloadHtmlBtn" class="secondary">Baixar HTML</button>
-          <button id="copyHtmlBtn" class="secondary">Copiar HTML</button>
-          <button id="resetBtn" class="ghost">Resetar</button>
+          <button id="downloadImageBtn" class="primary" data-i18n="downloadImage">Baixar imagem</button>
+          <button id="downloadHtmlBtn" class="secondary" data-i18n="downloadHtml">Baixar HTML</button>
+          <button id="copyHtmlBtn" class="secondary" data-i18n="copyHtml">Copiar HTML</button>
+          <button id="resetBtn" class="ghost" data-i18n="reset">Resetar</button>
         </div>
 
         <div id="exportStatus"></div>
-        <p class="hint">
+        <p class="hint" data-i18n="hintText">
           PNG é melhor para transparência e nitidez. JPG é mais leve. SVG é vetorial quando possível, mas imagens enviadas pelo usuário continuam embutidas.
         </p>
       </div>
@@ -332,10 +353,10 @@
                         <table id="logosHorizontal" cellpadding="0" cellspacing="0" border="0">
                           <tr>
                             <td id="mainLogoWrapH" valign="middle" style="padding-right:12px;">
-                              <img id="mainLogo" alt="Logo principal" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
+                              <img id="mainLogo" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
                             </td>
                             <td id="sideLogoWrapH" valign="middle" style="display:none;">
-                              <img id="sideLogo" alt="Logo secundária" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
+                              <img id="sideLogo" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
                             </td>
                           </tr>
                         </table>
@@ -343,12 +364,12 @@
                         <table id="logosVertical" cellpadding="0" cellspacing="0" border="0" style="display:none;">
                           <tr>
                             <td id="mainLogoWrapV" style="padding-bottom:8px;">
-                              <img id="mainLogoClone" alt="Logo principal" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
+                              <img id="mainLogoClone" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
                             </td>
                           </tr>
                           <tr>
                             <td id="sideLogoWrapV" style="display:none;">
-                              <img id="sideLogoClone" alt="Logo secundária" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
+                              <img id="sideLogoClone" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
                             </td>
                           </tr>
                         </table>
@@ -377,14 +398,127 @@
   <script type="module">
     import { toPng } from 'https://esm.sh/html-to-image@1.11.3';
 
-    
+    const translations = {
+      "pt-BR": {
+        title: "Gerador de assinatura",
+        paletteCorporate: "Corporativo",
+        paletteDark: "Escuro",
+        paletteBlue: "Azul",
+        paletteMinimal: "Minimal",
+        dataGroup: "Dados",
+        fontGroup: "Fonte",
+        logosGroup: "Logos",
+        colorsGroup: "Cores",
+        exportGroup: "Exportação",
+        nameLabel: "Nome",
+        roleLabel: "Cargo",
+        phoneLabel: "Telefone",
+        fontFamilyLabel: "Família da fonte",
+        showMainLogoCheck: "Mostrar logo principal",
+        showSideLogoCheck: "Mostrar logo secundária",
+        logoLayoutLabel: "Posicionamento das logos",
+        logoLayoutHorizontal: "Lado a lado",
+        logoLayoutVertical: "Empilhadas",
+        mainLogoWidth: "Largura logo principal",
+        sideLogoWidth: "Largura logo secundária",
+        mainLogoLabel: "Logo principal",
+        sideLogoLabel: "Logo secundária",
+        dropzoneText: "Arraste e solte a imagem aqui",
+        dropzoneOr: "ou selecione um arquivo:",
+        palettesLabel: "Paletas",
+        textColorLabel: "Cor do texto",
+        dividerColorLabel: "Cor do divisor",
+        accentColorLabel: "Cor de destaque",
+        bgColorLabel: "Cor de fundo",
+        formatLabel: "Formato",
+        scaleLabel: "Escala / resolução",
+        downloadImage: "Baixar imagem",
+        downloadHtml: "Baixar HTML",
+        copyHtml: "Copiar HTML",
+        reset: "Resetar",
+        hintText: "PNG é melhor para transparência e nitidez. JPG é mais leve. SVG é vetorial quando possível, mas imagens enviadas pelo usuário continuam embutidas.",
+        namePlaceholder: "Nome Sobrenome",
+        rolePlaceholder: "Cargo ou área",
+        phonePlaceholder: "(00) 0000-0000",
+        optionPng: "PNG",
+        optionJpg: "JPG",
+        optionSvg: "SVG",
+        logoMainAlt: "Logo principal",
+        logoSideAlt: "Logo secundária",
+        phonePrefix: "Telefone: ",
+        statusLogoLoaded: "Logo carregada com sucesso.",
+        statusCopied: "HTML copiado para a área de transferência.",
+        statusCopyFailed: "Falha ao copiar HTML.",
+        statusSvgDownloaded: "SVG baixado.",
+        statusImageDownloaded: "Imagem baixada",
+        statusImageFailed: "Não foi possível gerar a imagem.",
+        statusHtmlDownloaded: "HTML baixado."
+      },
+      "en": {
+        title: "Signature Generator",
+        paletteCorporate: "Corporate",
+        paletteDark: "Dark",
+        paletteBlue: "Blue",
+        paletteMinimal: "Minimal",
+        dataGroup: "Data",
+        fontGroup: "Font",
+        logosGroup: "Logos",
+        colorsGroup: "Colors",
+        exportGroup: "Export",
+        nameLabel: "Name",
+        roleLabel: "Role / Title",
+        phoneLabel: "Phone",
+        fontFamilyLabel: "Font Family",
+        showMainLogoCheck: "Show main logo",
+        showSideLogoCheck: "Show secondary logo",
+        logoLayoutLabel: "Logo Layout",
+        logoLayoutHorizontal: "Side by side",
+        logoLayoutVertical: "Stacked",
+        mainLogoWidth: "Main logo width",
+        sideLogoWidth: "Secondary logo width",
+        mainLogoLabel: "Main Logo",
+        sideLogoLabel: "Secondary Logo",
+        dropzoneText: "Drag and drop an image here",
+        dropzoneOr: "or select a file:",
+        palettesLabel: "Palettes",
+        textColorLabel: "Text color",
+        dividerColorLabel: "Divider color",
+        accentColorLabel: "Accent color",
+        bgColorLabel: "Background color",
+        formatLabel: "Format",
+        scaleLabel: "Scale / Resolution",
+        downloadImage: "Download image",
+        downloadHtml: "Download HTML",
+        copyHtml: "Copy HTML",
+        reset: "Reset",
+        hintText: "PNG is best for transparency and sharpness. JPG is lighter. SVG is vector when possible, but user-uploaded images remain embedded.",
+        namePlaceholder: "First Last",
+        rolePlaceholder: "Role or department",
+        phonePlaceholder: "(00) 0000-0000",
+        optionPng: "PNG",
+        optionJpg: "JPG",
+        optionSvg: "SVG",
+        logoMainAlt: "Main logo",
+        logoSideAlt: "Secondary logo",
+        phonePrefix: "Phone: ",
+        statusLogoLoaded: "Logo loaded successfully.",
+        statusCopied: "HTML copied to clipboard.",
+        statusCopyFailed: "Failed to copy HTML.",
+        statusSvgDownloaded: "SVG downloaded.",
+        statusImageDownloaded: "Image downloaded",
+        statusImageFailed: "Could not generate image.",
+        statusHtmlDownloaded: "HTML downloaded."
+      }
+    };
+
+    const langSelect = document.getElementById("langSelect");
     const nameInput = document.getElementById("nameInput");
     const roleInput = document.getElementById("roleInput");
     const phoneInput = document.getElementById("phoneInput");
     const fontFamilyInput = document.getElementById("fontFamilyInput");
 
-    const showMainLogo = document.getElementById("showMainLogo");
-    const showSideLogo = document.getElementById("showSideLogo");
+    const showMainLogoCheckbox = document.getElementById("showMainLogo");
+    const showSideLogoCheckbox = document.getElementById("showSideLogo");
     const logoLayoutInput = document.getElementById("logoLayoutInput");
     const mainLogoWidthInput = document.getElementById("mainLogoWidthInput");
     const sideLogoWidthInput = document.getElementById("sideLogoWidthInput");
@@ -435,62 +569,114 @@
     const defaultSideLogo = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='220'><rect width='100%' height='100%' fill='transparent'/><circle cx='110' cy='90' r='55' fill='%23d9f3e8'/><text x='45' y='185' font-family='Arial' font-size='32' font-weight='700' fill='%2337b37e'>Selo</text></svg>`;
 
     const palettes = [
-      { name: "Corporativo", text:"#1f3b73", divider:"#1f3b73", accent:"#37b37e", bg:"#f3f4f6" },
-      { name: "Escuro", text:"#1f2937", divider:"#111827", accent:"#10b981", bg:"#f3f4f6" },
-      { name: "Azul", text:"#0f2d75", divider:"#0f2d75", accent:"#2f7cff", bg:"#f5f8ff" },
-      { name: "Minimal", text:"#202124", divider:"#202124", accent:"#34a853", bg:"#ffffff" }
+      { name: "paletteCorporate", text: "#1f3b73", divider: "#1f3b73", accent: "#37b37e", bg: "#f3f4f6" },
+      { name: "paletteDark", text: "#1f2937", divider: "#111827", accent: "#10b981", bg: "#f3f4f6" },
+      { name: "paletteBlue", text: "#0f2d75", divider: "#0f2d75", accent: "#2f7cff", bg: "#f5f8ff" },
+      { name: "paletteMinimal", text: "#202124", divider: "#202124", accent: "#34a853", bg: "#ffffff" }
     ];
 
-    function setStatus(text){
-      exportStatus.textContent = text || "";
+    function setStatus(statusText) {
+      exportStatus.textContent = statusText || "";
     }
 
-    function buildPalettes(){
+    function applyLanguage() {
+      const language = langSelect.value;
+      document.documentElement.lang = language;
+      const text = translations[language];
+
+      const i18nElements = document.querySelectorAll("[data-i18n]");
+      for (const element of i18nElements) {
+        const key = element.getAttribute("data-i18n");
+        if (text[key] !== undefined) {
+          element.textContent = text[key];
+        }
+      }
+
+      const placeholderElements = document.querySelectorAll("[data-i18n-placeholder]");
+      for (const element of placeholderElements) {
+        const key = element.getAttribute("data-i18n-placeholder");
+        if (text[key] !== undefined) {
+          element.placeholder = text[key];
+        }
+      }
+
+      const optionElements = document.querySelectorAll("[data-i18n-opt]");
+      for (const element of optionElements) {
+        const key = element.getAttribute("data-i18n-opt");
+        if (text[key] !== undefined) {
+          element.textContent = text[key];
+        }
+      }
+
+      const altElements = document.querySelectorAll("[data-i18n-alt]");
+      for (const element of altElements) {
+        const key = element.getAttribute("data-i18n-alt");
+        if (text[key] !== undefined) {
+          element.alt = text[key];
+        }
+      }
+
+      applyText();
+      buildPalettes();
+    }
+
+    function detectBrowserLanguage() {
+      const browserLanguage = navigator.language || navigator.userLanguage || "";
+      if (browserLanguage.startsWith("en")) {
+        return "en";
+      }
+      return "pt-BR";
+    }
+
+    function buildPalettes() {
       paletteGrid.innerHTML = "";
-      palettes.forEach(p=>{
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "palette";
-        b.innerHTML = `
+      for (const palette of palettes) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "palette";
+        const paletteName = translations[langSelect.value][palette.name];
+        button.innerHTML = `
           <div class="swatches">
-            <span class="sw" style="background:${p.text}"></span>
-            <span class="sw" style="background:${p.divider}"></span>
-            <span class="sw" style="background:${p.accent}"></span>
-            <span class="sw" style="background:${p.bg}"></span>
+            <span class="sw" style="background:${palette.text}"></span>
+            <span class="sw" style="background:${palette.divider}"></span>
+            <span class="sw" style="background:${palette.accent}"></span>
+            <span class="sw" style="background:${palette.bg}"></span>
           </div>
-          ${p.name}
+          ${paletteName}
         `;
-        b.addEventListener("click", ()=>{
-          textColorInput.value = p.text;
-          dividerColorInput.value = p.divider;
-          accentColorInput.value = p.accent;
-          bgColorInput.value = p.bg;
+        button.addEventListener("click", function () {
+          textColorInput.value = palette.text;
+          dividerColorInput.value = palette.divider;
+          accentColorInput.value = palette.accent;
+          bgColorInput.value = palette.bg;
           applyColors();
         });
-        paletteGrid.appendChild(b);
-      });
+        paletteGrid.appendChild(button);
+      }
     }
 
-    function syncLogoSources(){
+    function syncLogoSources() {
       mainLogoClone.src = mainLogo.src;
       sideLogoClone.src = sideLogo.src;
     }
 
-    function applyText(){
+    function applyText() {
+      const language = langSelect.value;
+      const prefix = translations[language].phonePrefix;
       nameEl.textContent = nameInput.value || "";
       roleEl.textContent = roleInput.value || "";
-      phoneEl.textContent = `Telefone: ${phoneInput.value || ""}`;
+      phoneEl.textContent = `${prefix}${phoneInput.value || ""}`;
     }
 
-    function applyFont(){
-      const f = fontFamilyInput.value;
-      sigTable.style.fontFamily = f;
-      nameEl.style.fontFamily = f;
-      roleEl.style.fontFamily = f;
-      phoneEl.style.fontFamily = f;
+    function applyFont() {
+      const fontFamily = fontFamilyInput.value;
+      sigTable.style.fontFamily = fontFamily;
+      nameEl.style.fontFamily = fontFamily;
+      roleEl.style.fontFamily = fontFamily;
+      phoneEl.style.fontFamily = fontFamily;
     }
 
-    function applyColors(){
+    function applyColors() {
       sigTable.style.background = bgColorInput.value;
       nameEl.style.color = textColorInput.value;
       roleEl.style.color = textColorInput.value;
@@ -499,27 +685,27 @@
       sigTable.setAttribute("data-accent", accentColorInput.value);
     }
 
-    function applyLogoSizes(){
-      const mainW = parseInt(mainLogoWidthInput.value, 10);
-      const sideW = parseInt(sideLogoWidthInput.value, 10);
+    function applyLogoSizes() {
+      const mainWidth = parseInt(mainLogoWidthInput.value, 10);
+      const sideWidth = parseInt(sideLogoWidthInput.value, 10);
 
-      mainSizeLabel.textContent = `${mainW}px`;
-      sideSizeLabel.textContent = `${sideW}px`;
+      mainSizeLabel.textContent = `${mainWidth}px`;
+      sideSizeLabel.textContent = `${sideWidth}px`;
 
-      [mainLogo, mainLogoClone].forEach(img => {
-        img.style.width = `${mainW}px`;
-        img.style.height = "auto";
-      });
+      for (const image of [mainLogo, mainLogoClone]) {
+        image.style.width = `${mainWidth}px`;
+        image.style.height = "auto";
+      }
 
-      [sideLogo, sideLogoClone].forEach(img => {
-        img.style.width = `${sideW}px`;
-        img.style.height = "auto";
-      });
+      for (const image of [sideLogo, sideLogoClone]) {
+        image.style.width = `${sideWidth}px`;
+        image.style.height = "auto";
+      }
     }
 
-    function applyLogosVisibilityAndLayout(){
-      const hasMain = showMainLogo.checked;
-      const hasSide = showSideLogo.checked;
+    function applyLogosVisibilityAndLayout() {
+      const hasMain = showMainLogoCheckbox.checked;
+      const hasSide = showSideLogoCheckbox.checked;
       const hasAny = hasMain || hasSide;
       const vertical = logoLayoutInput.value === "vertical";
 
@@ -538,20 +724,24 @@
       mainLogoWrapV.style.paddingBottom = (hasMain && hasSide) ? "8px" : "0";
     }
 
-    function readAsDataURL(file){
-      return new Promise((resolve,reject)=>{
+    function readAsDataURL(file) {
+      return new Promise(function (resolve, reject) {
         const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
+        reader.onload = function (event) {
+          resolve(event.target.result);
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
     }
 
-    async function setLogoFromFile(file, targetType){
-      if(!file || !file.type.startsWith("image/")) return;
+    async function setLogoFromFile(file, targetType) {
+      if (!file || !file.type.startsWith("image/")) {
+        return;
+      }
       const data = await readAsDataURL(file);
 
-      if(targetType === "main"){
+      if (targetType === "main") {
         mainLogo.src = data;
       } else {
         sideLogo.src = data;
@@ -560,78 +750,97 @@
       syncLogoSources();
       applyLogoSizes();
       applyLogosVisibilityAndLayout();
-      setStatus("Logo carregada com sucesso.");
+      setStatus(translations[langSelect.value].statusLogoLoaded);
     }
 
-    function wireDropzone(zone, input, targetType){
-      ["dragenter","dragover"].forEach(evt=>{
-        zone.addEventListener(evt,e=>{
-          e.preventDefault();
-          e.stopPropagation();
+    function wireDropzone(zone, input, targetType) {
+      const dragEvents = ["dragenter", "dragover"];
+      for (const eventType of dragEvents) {
+        zone.addEventListener(eventType, function (event) {
+          event.preventDefault();
+          event.stopPropagation();
           zone.classList.add("dragover");
         });
-      });
+      }
 
-      ["dragleave","drop"].forEach(evt=>{
-        zone.addEventListener(evt,e=>{
-          e.preventDefault();
-          e.stopPropagation();
+      const leaveEvents = ["dragleave", "drop"];
+      for (const eventType of leaveEvents) {
+        zone.addEventListener(eventType, function (event) {
+          event.preventDefault();
+          event.stopPropagation();
           zone.classList.remove("dragover");
         });
+      }
+
+      zone.addEventListener("drop", async function (event) {
+        const file = event.dataTransfer.files && event.dataTransfer.files[0];
+        if (file) {
+          await setLogoFromFile(file, targetType);
+        }
       });
 
-      zone.addEventListener("drop", async e=>{
-        const file = e.dataTransfer.files && e.dataTransfer.files[0];
-        if(file) await setLogoFromFile(file, targetType);
-      });
-
-      input.addEventListener("change", async e=>{
-        const file = e.target.files && e.target.files[0];
-        if(file) await setLogoFromFile(file, targetType);
+      input.addEventListener("change", async function (event) {
+        const file = event.target.files && event.target.files[0];
+        if (file) {
+          await setLogoFromFile(file, targetType);
+        }
       });
     }
 
-    function inlineForExport(root){
+    function inlineForExport(root) {
       root.style.fontFamily = fontFamilyInput.value;
       root.style.background = bgColorInput.value;
       root.style.minWidth = "0";
 
-      const n = root.querySelector("#nameEl");
-      const r = root.querySelector("#roleEl");
-      const p = root.querySelector("#phoneEl");
-      const d = root.querySelector("#dividerBar");
+      const nameElement = root.querySelector("#nameEl");
+      const roleElement = root.querySelector("#roleEl");
+      const phoneElement = root.querySelector("#phoneEl");
+      const dividerElement = root.querySelector("#dividerBar");
 
-      if(n){ n.style.color = textColorInput.value; n.style.fontFamily = fontFamilyInput.value; }
-      if(r){ r.style.color = textColorInput.value; r.style.fontFamily = fontFamilyInput.value; }
-      if(p){ p.style.color = textColorInput.value; p.style.fontFamily = fontFamilyInput.value; }
-      if(d){ d.style.background = dividerColorInput.value; }
+      if (nameElement) {
+        nameElement.style.color = textColorInput.value;
+        nameElement.style.fontFamily = fontFamilyInput.value;
+      }
+      if (roleElement) {
+        roleElement.style.color = textColorInput.value;
+        roleElement.style.fontFamily = fontFamilyInput.value;
+      }
+      if (phoneElement) {
+        phoneElement.style.color = textColorInput.value;
+        phoneElement.style.fontFamily = fontFamilyInput.value;
+      }
+      if (dividerElement) {
+        dividerElement.style.background = dividerColorInput.value;
+      }
     }
 
-    async function copyHtml(){
+    async function copyHtml() {
       const clone = sigTable.cloneNode(true);
       inlineForExport(clone);
       await navigator.clipboard.writeText(clone.outerHTML);
-      setStatus("HTML copiado para a área de transferência.");
+      setStatus(translations[langSelect.value].statusCopied);
     }
 
-    function downloadBlob(blob, filename){
+    function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 500);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+      }, 500);
     }
 
-    function getSignatureHtmlForSvg(){
+    function getSignatureHtmlForSvg() {
       const clone = sigTable.cloneNode(true);
       inlineForExport(clone);
       return clone.outerHTML;
     }
 
-    function getPreviewDimensions(){
+    function getPreviewDimensions() {
       const rect = sigTable.getBoundingClientRect();
       return {
         width: Math.ceil(rect.width),
@@ -639,97 +848,100 @@
       };
     }
 
-    async function exportAsSvg(){
-      const { width, height } = getPreviewDimensions();
-      const html = getSignatureHtmlForSvg();
+    async function exportAsSvg() {
+      const dimensions = getPreviewDimensions();
+      const htmlContent = getSignatureHtmlForSvg();
 
-      const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      const svgContent = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
   <foreignObject width="100%" height="100%">
-    <div xmlns="http://www.w3.org/1999/xhtml">${html}</div>
+    <div xmlns="http://www.w3.org/1999/xhtml">${htmlContent}</div>
   </foreignObject>
 </svg>`.trim();
 
-      downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), "assinatura.svg");
-      setStatus("SVG baixado.");
+      downloadBlob(new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" }), "assinatura.svg");
+      setStatus(translations[langSelect.value].statusSvgDownloaded);
     }
 
-    function loadImage(src){
-      return new Promise((resolve,reject)=>{
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
+    function loadImage(src) {
+      return new Promise(function (resolve, reject) {
+        const image = new Image();
+        image.onload = function () {
+          resolve(image);
+        };
+        image.onerror = reject;
+        image.src = src;
       });
     }
 
-    async function exportAsRaster(type){
+    async function exportAsRaster(type) {
       const scale = parseInt(exportScaleInput.value, 10);
-      const { width, height } = getPreviewDimensions();
-      const html = getSignatureHtmlForSvg();
+      const dimensions = getPreviewDimensions();
+      const htmlContent = getSignatureHtmlForSvg();
 
-      const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}">
+      const svgContent = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width * scale}" height="${dimensions.height * scale}">
   <foreignObject width="100%" height="100%" transform="scale(${scale})">
-    <div xmlns="http://www.w3.org/1999/xhtml">${html}</div>
+    <div xmlns="http://www.w3.org/1999/xhtml">${htmlContent}</div>
   </foreignObject>
 </svg>`.trim();
 
-      const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+      const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
       const svgUrl = URL.createObjectURL(svgBlob);
 
-      try{
-        const img = await loadImage(svgUrl);
+      try {
+        const loadedImage = await loadImage(svgUrl);
         const canvas = document.createElement("canvas");
-        canvas.width = width * scale;
-        canvas.height = height * scale;
+        canvas.width = dimensions.width * scale;
+        canvas.height = dimensions.height * scale;
 
-        const ctx = canvas.getContext("2d");
+        const context = canvas.getContext("2d");
 
-        if(type === "jpeg"){
-          ctx.fillStyle = bgColorInput.value;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (type === "jpeg") {
+          context.fillStyle = bgColorInput.value;
+          context.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        context.drawImage(loadedImage, 0, 0, canvas.width, canvas.height);
 
-        const mime = type === "jpeg" ? "image/jpeg" : "image/png";
+        const mimeType = type === "jpeg" ? "image/jpeg" : "image/png";
         const quality = type === "jpeg" ? 0.95 : undefined;
 
-        canvas.toBlob(blob => {
-          if(!blob){
-            setStatus("Não foi possível gerar a imagem.");
+        canvas.toBlob(function (imageBlob) {
+          if (!imageBlob) {
+            setStatus(translations[langSelect.value].statusImageFailed);
             return;
           }
-          downloadBlob(blob, type === "jpeg" ? "assinatura.jpg" : "assinatura.png");
-          setStatus(`${type.toUpperCase()} baixado em ${scale}x.`);
-        }, mime, quality);
+          downloadBlob(imageBlob, type === "jpeg" ? "assinatura.jpg" : "assinatura.png");
+          setStatus(`${translations[langSelect.value].statusImageDownloaded} em ${scale}x.`);
+        }, mimeType, quality);
       } finally {
-        setTimeout(() => URL.revokeObjectURL(svgUrl), 500);
+        setTimeout(function () {
+          URL.revokeObjectURL(svgUrl);
+        }, 500);
       }
     }
 
+    async function downloadImage() {
+      const signatureTable = document.getElementById("sigTable");
+      const dataUrl = await toPng(signatureTable, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#f3f4f6"
+      });
 
-  async function downloadImage() {
-    const node = document.getElementById('sigTable');
-    const dataUrl = await toPng(node, {
-      pixelRatio: 2,
-      cacheBust: true,
-      backgroundColor: '#f3f4f6'
-    });
+      const anchor = document.createElement("a");
+      anchor.href = dataUrl;
+      anchor.download = "assinatura.png";
+      anchor.click();
+    }
 
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = 'assinatura.png';
-    a.click();
-  }
-
-    function downloadHtml(){
+    function downloadHtml() {
       const clone = sigTable.cloneNode(true);
       inlineForExport(clone);
 
-      const html = `<!doctype html>
-<html lang="pt-BR">
+      const htmlContent = `<!doctype html>
+<html lang="${langSelect.value}">
 <head>
   <meta charset="utf-8">
   <title>Assinatura</title>
@@ -739,18 +951,18 @@ ${clone.outerHTML}
 </body>
 </html>`;
 
-      downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), "assinatura.html");
-      setStatus("HTML baixado.");
+      downloadBlob(new Blob([htmlContent], { type: "text/html;charset=utf-8" }), "assinatura.html");
+      setStatus(translations[langSelect.value].statusHtmlDownloaded);
     }
 
-    function resetAll(){
+    function resetAll() {
       nameInput.value = "Nome Sobrenome";
       roleInput.value = "Cargo ou área";
       phoneInput.value = "(00) 0000-0000";
       fontFamilyInput.value = "Arial,Helvetica,sans-serif";
 
-      showMainLogo.checked = true;
-      showSideLogo.checked = false;
+      showMainLogoCheckbox.checked = true;
+      showSideLogoCheckbox.checked = false;
       logoLayoutInput.value = "horizontal";
       mainLogoWidthInput.value = 260;
       sideLogoWidthInput.value = 120;
@@ -775,19 +987,25 @@ ${clone.outerHTML}
       setStatus("");
     }
 
-    [nameInput, roleInput, phoneInput].forEach(el => el.addEventListener("input", applyText));
+    for (const element of [nameInput, roleInput, phoneInput]) {
+      element.addEventListener("input", applyText);
+    }
     fontFamilyInput.addEventListener("change", applyFont);
-    [textColorInput, dividerColorInput, accentColorInput, bgColorInput].forEach(el => el.addEventListener("input", applyColors));
-    [showMainLogo, showSideLogo].forEach(el => el.addEventListener("change", applyLogosVisibilityAndLayout));
+    for (const element of [textColorInput, dividerColorInput, accentColorInput, bgColorInput]) {
+      element.addEventListener("input", applyColors);
+    }
+    for (const element of [showMainLogoCheckbox, showSideLogoCheckbox]) {
+      element.addEventListener("change", applyLogosVisibilityAndLayout);
+    }
     logoLayoutInput.addEventListener("change", applyLogosVisibilityAndLayout);
     mainLogoWidthInput.addEventListener("input", applyLogoSizes);
     sideLogoWidthInput.addEventListener("input", applyLogoSizes);
 
-    copyHtmlBtn.addEventListener("click", async ()=>{
-      try{
+    copyHtmlBtn.addEventListener("click", async function () {
+      try {
         await copyHtml();
       } catch {
-        setStatus("Falha ao copiar HTML.");
+        setStatus(translations[langSelect.value].statusCopyFailed);
       }
     });
 
@@ -795,11 +1013,15 @@ ${clone.outerHTML}
     downloadImageBtn.addEventListener("click", downloadImage);
     resetBtn.addEventListener("click", resetAll);
 
+    langSelect.addEventListener("change", applyLanguage);
+
     wireDropzone(mainDrop, mainLogoInput, "main");
     wireDropzone(sideDrop, sideLogoInput, "side");
 
+    langSelect.value = detectBrowserLanguage();
     buildPalettes();
     resetAll();
+    applyLanguage();
   </script>
 </body>
 </html>

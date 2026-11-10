@@ -153,11 +153,12 @@ test("edits the secondary logo independently", async function ({ page }) {
   await page.locator("#areaWidthInput").fill("200");
 
   await expect(page.locator("#showSideLogo")).not.toBeChecked();
-  await expect(page.locator("#sideLogo")).toHaveCSS("width", "200px");
+  await expect(page.locator("#sideLogo")).toHaveCount(0);
   await expect(page.locator("#mainLogo")).toHaveCSS("width", "260px");
 
   await page.locator("#logoFileInput").setInputFiles(twoColors);
   await expect(page.locator("#showSideLogo")).toBeChecked();
+  await expect(page.locator("#sideLogo")).toHaveCSS("width", "200px");
   await expect(page.locator("#sideLogo")).toHaveCSS("height", "100px");
 
   await page.locator(".segmented").getByText("Logo principal").click();

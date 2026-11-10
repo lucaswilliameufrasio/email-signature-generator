@@ -1,5 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { logosAreStacked } from "./helpers";
 
 const logoFixture = path.join(import.meta.dirname, "fixtures", "logo.png");
 
@@ -31,10 +32,10 @@ test("restores the signature after reloading", async function ({ page }) {
   await expect(page.locator("#fontFamilyInput")).toHaveValue("'Georgia',serif");
   await expect(page.locator("#textColorInput")).toHaveValue("#0f2d75");
   await expect(page.locator("#showSideLogo")).toBeChecked();
-  await expect(page.locator("#logosVertical")).toBeVisible();
+  expect(await logosAreStacked(page)).toBe(true);
   await expect(page.locator("#areaWidthInput")).toHaveValue("300");
   await expect(page.locator("#zoomInput")).toHaveValue("80");
-  await expect(page.locator("#mainLogoClone")).toHaveAttribute("src", /^data:image\/png;base64,/);
+  await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
   await expect(page.locator("#exportFormatInput")).toHaveValue("webp");
   await expect(page.locator("#exportQualityInput")).toHaveValue("70");
   await expect(page.locator("#exportScaleInput")).toHaveValue("3");

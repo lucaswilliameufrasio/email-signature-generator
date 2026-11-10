@@ -7,8 +7,12 @@ A browser-based tool to design, preview, and export email signatures with custom
 ## Features
 
 - Live preview of the signature as you edit
-- Optional text lines (name, role, phone): empty lines are hidden
-- Custom colors: text, divider, accent (role) and background, each labeled with where it is used
+- Optional text lines: name, role, phone, email, website, LinkedIn and Instagram; empty lines are hidden
+- Contact lines become links (`tel:`, `mailto:`, `https:`), with optional labels ("Phone:", "Email:"...)
+- Per-line text style: size, weight, own color, italic, uppercase, letter spacing, line height, space above and indent
+- Layout: logos left, right or above the text; text alignment; outer margins
+- Divider: show/hide, solid/dashed/dotted, thickness, length that follows the content or is fixed, and spacing on each side (becomes horizontal when logos are above the text)
+- Custom colors: text, divider, accent (role and links) and background, each labeled with where it is used
 - Built-in color palettes for quick styling
 - Font family selector (Arial, Trebuchet MS, Segoe UI, Verdana, Tahoma, Georgia, Times New Roman)
 - Logo upload via file picker or drag-and-drop (main and secondary), side by side or stacked

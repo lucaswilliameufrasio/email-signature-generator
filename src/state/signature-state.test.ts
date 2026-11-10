@@ -88,4 +88,26 @@ describe("parseState", function () {
     expect(parsed.logos.main.source).toBe("data:image/png;base64,BBBB");
     expect(parsed.logos.side.source).toBeUndefined();
   });
+
+  it("round trips and validates text styles, layout, divider and contacts", function () {
+    const state = createDefaultState("en");
+    state.contacts.email = "john@company.com";
+    state.showLabels = false;
+    state.textStyles.role = { ...state.textStyles.role, fontSize: 30, fontWeight: 700, italic: true, color: "#aa0000", letterSpacing: 1.5 };
+    state.layout = { arrangement: "logos-top", textAlign: "center", paddingX: 10, paddingY: 4 };
+    state.divider = { show: false, thickness: 4, style: "dashed", heightMode: "fixed", length: 120, gapBefore: 5, gapAfter: 6 };
+    expect(parseState(JSON.parse(JSON.stringify(state)), "en")).toEqual(state);
+
+    const invalid = parseState({
+      contacts: { email: 42 },
+      textStyles: { name: { fontSize: 500, fontWeight: 450, color: "blue", lineHeight: 0.1 } },
+      layout: { arrangement: "diagonal", textAlign: "justify", paddingX: -5 },
+      divider: { thickness: 99, style: "double", heightMode: "weird", gapAfter: 1000 }
+    }, "en");
+    const defaults = createDefaultState("en");
+    expect(invalid.contacts.email).toBe("");
+    expect(invalid.textStyles.name).toEqual({ ...defaults.textStyles.name, fontSize: 72, lineHeight: 0.8 });
+    expect(invalid.layout).toEqual({ ...defaults.layout, paddingX: 0 });
+    expect(invalid.divider).toEqual({ ...defaults.divider, thickness: 12, gapAfter: 80 });
+  });
 });

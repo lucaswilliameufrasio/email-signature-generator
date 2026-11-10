@@ -1,5 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { logosAreStacked } from "./helpers";
 
 const logoFixture = path.join(import.meta.dirname, "fixtures", "logo.png");
 
@@ -74,8 +75,8 @@ test("paints the role with the accent color and explains where each color is use
 
   await expect(page.locator("#roleEl")).toHaveCSS("color", "rgb(255, 0, 0)");
   await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(31, 59, 115)");
-  await expect(page.locator("#accentColorUsage")).toHaveText("Usada em: cargo");
-  await expect(page.locator("#textColorUsage")).toHaveText("Usada em: nome e telefone");
+  await expect(page.locator("#accentColorUsage")).toHaveText("Usada em: cargo e links (e-mail, site, redes)");
+  await expect(page.locator("#textColorUsage")).toHaveText("Usada em: nome, telefone e rótulos");
 });
 
 test("changes the logo layout and visibility", async function ({ page }) {
@@ -83,9 +84,8 @@ test("changes the logo layout and visibility", async function ({ page }) {
   await expect(page.locator("#sideLogo")).toBeVisible();
 
   await page.locator("#logoLayoutInput").selectOption("vertical");
-  await expect(page.locator("#logosVertical")).toBeVisible();
-  await expect(page.locator("#logosHorizontal")).toBeHidden();
-  await expect(page.locator("#sideLogoClone")).toBeVisible();
+  await expect(page.locator("#sideLogo")).toBeVisible();
+  expect(await logosAreStacked(page)).toBe(true);
 
   await page.locator("#showMainLogo").uncheck();
   await page.locator("#showSideLogo").uncheck();
@@ -110,7 +110,7 @@ test("uploads a custom logo", async function ({ page }) {
   await page.locator("#logoFileInput").setInputFiles(logoFixture);
 
   await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
-  await expect(page.locator("#mainLogoClone")).toHaveAttribute("src", /^data:image\/png;base64,/);
+  await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
   await expect(page.locator("#exportStatus")).toHaveText("Logo carregada com sucesso.");
 });
 

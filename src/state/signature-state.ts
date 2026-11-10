@@ -2,6 +2,26 @@ import { isLanguage } from "../i18n/language";
 import { translations, type Language } from "../i18n/translations";
 import { isImageFormat, type ImageFormat } from "../export/image-format";
 import { fontOptions, isKnownFont } from "../signature/fonts";
+import {
+  contactKeys,
+  defaultDivider,
+  defaultLayout,
+  defaultTextStyle,
+  defaultTextStyles,
+  dividerLimits,
+  isArrangement,
+  isDividerStyle,
+  isFontWeight,
+  isTextAlignment,
+  layoutLimits,
+  lineKeys,
+  textStyleLimits,
+  type ContactKey,
+  type DividerSettings,
+  type LayoutSettings,
+  type LineKey,
+  type TextStyle
+} from "../signature/style-model";
 import { frameLimits, isAlignment, isFitMode, type CropRect, type LogoFrame } from "../logos/logo-frame";
 
 export const textFields = ["name", "role", "phone"] as const;
@@ -22,9 +42,14 @@ export type SignatureState = {
   name: string;
   role: string;
   phone: string;
+  contacts: Record<ContactKey, string>;
   editedFields: TextField[];
   showCountryCode: boolean;
+  showLabels: boolean;
   fontFamily: string;
+  textStyles: Record<LineKey, TextStyle>;
+  layout: LayoutSettings;
+  divider: DividerSettings;
   logos: {
     showMain: boolean;
     showSide: boolean;
@@ -84,9 +109,14 @@ export function createDefaultState(language: Language): SignatureState {
     name: translatedDefaultText(language, "name"),
     role: translatedDefaultText(language, "role"),
     phone: translatedDefaultText(language, "phone"),
+    contacts: { email: "", website: "", linkedin: "", instagram: "" },
     editedFields: [],
     showCountryCode: true,
+    showLabels: true,
     fontFamily: defaultFontFamily,
+    textStyles: defaultTextStyles(),
+    layout: defaultLayout(),
+    divider: defaultDivider(),
     logos: {
       showMain: true,
       showSide: false,
@@ -135,6 +165,14 @@ function readString(source: Record<string, unknown>, key: string, fallback: stri
 function readBoolean(source: Record<string, unknown>, key: string, fallback: boolean): boolean {
   const value = source[key];
   return typeof value === "boolean" ? value : fallback;
+}
+
+function readDecimal(source: Record<string, unknown>, key: string, fallback: number, minimum: number, maximum: number): number {
+  const value = source[key];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(maximum, Math.max(minimum, Math.round(value * 100) / 100));
 }
 
 function readInteger(source: Record<string, unknown>, key: string, fallback: number, minimum: number, maximum: number): number {
@@ -209,6 +247,68 @@ function readFrame(source: Record<string, unknown>, target: LogoTarget, legacyWi
   return frame;
 }
 
+function readTextStyle(source: Record<string, unknown>, key: LineKey): TextStyle {
+  const defaults = defaultTextStyle(key);
+  const rawWeight = source["fontWeight"];
+  const style: TextStyle = {
+    fontSize: readInteger(source, "fontSize", defaults.fontSize, textStyleLimits.fontSize.min, textStyleLimits.fontSize.max),
+    fontWeight: isFontWeight(rawWeight) ? rawWeight : defaults.fontWeight,
+    lineHeight: readDecimal(source, "lineHeight", defaults.lineHeight, textStyleLimits.lineHeight.min, textStyleLimits.lineHeight.max),
+    letterSpacing: readDecimal(source, "letterSpacing", defaults.letterSpacing, textStyleLimits.letterSpacing.min, textStyleLimits.letterSpacing.max),
+    spacingTop: readInteger(source, "spacingTop", defaults.spacingTop, textStyleLimits.spacingTop.min, textStyleLimits.spacingTop.max),
+    indent: readInteger(source, "indent", defaults.indent, textStyleLimits.indent.min, textStyleLimits.indent.max),
+    italic: readBoolean(source, "italic", defaults.italic),
+    uppercase: readBoolean(source, "uppercase", defaults.uppercase)
+  };
+  const rawColor = source["color"];
+  if (typeof rawColor === "string" && /^#[0-9a-f]{6}$/i.test(rawColor)) {
+    style.color = rawColor.toLowerCase();
+  }
+  return style;
+}
+
+function readTextStyles(source: Record<string, unknown>): Record<LineKey, TextStyle> {
+  const styles = defaultTextStyles();
+  for (const key of lineKeys) {
+    styles[key] = readTextStyle(readRecord(source, key), key);
+  }
+  return styles;
+}
+
+function readLayout(source: Record<string, unknown>): LayoutSettings {
+  const defaults = defaultLayout();
+  const rawArrangement = source["arrangement"];
+  const rawAlign = source["textAlign"];
+  return {
+    arrangement: isArrangement(rawArrangement) ? rawArrangement : defaults.arrangement,
+    textAlign: isTextAlignment(rawAlign) ? rawAlign : defaults.textAlign,
+    paddingX: readInteger(source, "paddingX", defaults.paddingX, layoutLimits.padding.min, layoutLimits.padding.max),
+    paddingY: readInteger(source, "paddingY", defaults.paddingY, layoutLimits.padding.min, layoutLimits.padding.max)
+  };
+}
+
+function readDivider(source: Record<string, unknown>): DividerSettings {
+  const defaults = defaultDivider();
+  const rawStyle = source["style"];
+  return {
+    show: readBoolean(source, "show", defaults.show),
+    thickness: readInteger(source, "thickness", defaults.thickness, dividerLimits.thickness.min, dividerLimits.thickness.max),
+    style: isDividerStyle(rawStyle) ? rawStyle : defaults.style,
+    heightMode: source["heightMode"] === "fixed" ? "fixed" : "auto",
+    length: readInteger(source, "length", defaults.length, dividerLimits.length.min, dividerLimits.length.max),
+    gapBefore: readInteger(source, "gapBefore", defaults.gapBefore, dividerLimits.gap.min, dividerLimits.gap.max),
+    gapAfter: readInteger(source, "gapAfter", defaults.gapAfter, dividerLimits.gap.min, dividerLimits.gap.max)
+  };
+}
+
+function readContacts(source: Record<string, unknown>): Record<ContactKey, string> {
+  const contacts: Record<ContactKey, string> = { email: "", website: "", linkedin: "", instagram: "" };
+  for (const key of contactKeys) {
+    contacts[key] = readString(source, key, "");
+  }
+  return contacts;
+}
+
 function readSlot(logos: Record<string, unknown>, target: LogoTarget): LogoSlot {
   const slot = readRecord(logos, target);
   const legacySourceKey = target === "main" ? "mainSource" : "sideSource";
@@ -257,9 +357,14 @@ export function parseState(input: unknown, fallbackLanguage: Language): Signatur
     name: readString(input, "name", defaults.name),
     role: readString(input, "role", defaults.role),
     phone: readString(input, "phone", defaults.phone),
+    contacts: readContacts(readRecord(input, "contacts")),
     editedFields: [...new Set(editedFields)],
     showCountryCode: readBoolean(input, "showCountryCode", defaults.showCountryCode),
+    showLabels: readBoolean(input, "showLabels", defaults.showLabels),
     fontFamily: isKnownFont(rawFont) ? rawFont : defaults.fontFamily,
+    textStyles: readTextStyles(readRecord(input, "textStyles")),
+    layout: readLayout(readRecord(input, "layout")),
+    divider: readDivider(readRecord(input, "divider")),
     logos: {
       showMain: readBoolean(logos, "showMain", defaults.logos.showMain),
       showSide: readBoolean(logos, "showSide", defaults.logos.showSide),

@@ -1,6 +1,5 @@
 import { getElements } from "./app/elements";
 import { createLogoBaker } from "./app/logo-baker";
-import { applyBakedLogo, renderSignature } from "./app/render-signature";
 import { syncControls } from "./app/sync-controls";
 import { copyRichHtml } from "./export/clipboard";
 import { downloadBlob } from "./export/download";
@@ -17,7 +16,25 @@ import type { createCropDialog } from "./logos/crop-dialog";
 import { areaHeightForImage, frameLimits, isAlignment, isFitMode, resetFraming, type LogoFrame } from "./logos/logo-frame";
 import { defaultMainLogo, defaultSideLogo } from "./signature/default-logos";
 import { fontOptions } from "./signature/fonts";
+import { buildSignature, type LogoImages } from "./signature/build-signature";
+import { signatureLines, signaturePlainText } from "./signature/lines";
 import { palettes } from "./signature/palettes";
+import {
+  defaultTextStyle,
+  dividerLimits,
+  isArrangement,
+  isDividerStyle,
+  isFontWeight,
+  isLineKey,
+  isTextAlignment,
+  layoutLimits,
+  textStyleLimits,
+  type ContactKey,
+  type DividerSettings,
+  type LayoutSettings,
+  type LineKey,
+  type TextStyle
+} from "./signature/style-model";
 import {
   changeLanguage,
   createDefaultState,
@@ -41,9 +58,12 @@ let pendingSave: ReturnType<typeof setTimeout> | undefined;
 let lastSaveResult: SaveResult = "saved";
 let renderedLanguage = "";
 let editingTarget: LogoTarget = "main";
+let editingLine: LineKey = "name";
+
+const logoImages: LogoImages = { main: new Image(), side: new Image() };
 
 const logoBaker = createLogoBaker(function (target, bakedSource) {
-  applyBakedLogo(elements, target, bakedSource);
+  logoImages[target].src = bakedSource;
 }, function (error) {
   console.error(error);
 });
@@ -127,8 +147,15 @@ function render(): void {
     buildPalettes();
     renderedLanguage = state.language;
   }
-  syncControls(state, elements, editingTarget);
-  renderSignature(state, elements, texts());
+  const currentTexts = texts();
+  syncControls(state, elements, { logo: editingTarget, line: editingLine }, currentTexts);
+  const signature = buildSignature({
+    state,
+    texts: currentTexts,
+    lines: signatureLines(state, currentTexts),
+    logoImages
+  });
+  elements.signaturePreview.replaceChildren(signature);
   for (const target of ["main", "side"] as const) {
     logoBaker.request(target, logoSource(target), state.logos[target].frame);
   }
@@ -274,8 +301,16 @@ async function downloadAdjustedLogo(target: LogoTarget): Promise<void> {
   downloadBlob(await response.blob(), `${baseName}.png`);
 }
 
+function currentSignature(): HTMLTableElement {
+  const signature = elements.signaturePreview.querySelector("#sigTable");
+  if (!(signature instanceof HTMLTableElement)) {
+    throw new Error("Signature preview is missing");
+  }
+  return signature;
+}
+
 function exportableClone(): HTMLElement {
-  const clone = elements.sigTable.cloneNode(true);
+  const clone = currentSignature().cloneNode(true);
   if (!(clone instanceof HTMLElement)) {
     throw new Error("Signature clone is not an element");
   }
@@ -288,14 +323,7 @@ function visibleLogos(): { main: boolean; side: boolean } {
 }
 
 function plainTextSignature(): string {
-  return [elements.nameEl, elements.roleEl, elements.phoneEl]
-    .filter(function (element) {
-      return element.style.display !== "none";
-    })
-    .map(function (element) {
-      return element.textContent;
-    })
-    .join("\n");
+  return signaturePlainText(signatureLines(state, texts()));
 }
 
 async function copySignature(logoSources: LogoSources): Promise<void> {
@@ -312,7 +340,7 @@ async function downloadImageAs(format: ImageFormat): Promise<void> {
   try {
     await logoBaker.ready();
     const imageBlob = await exportImage({
-      node: elements.sigTable,
+      node: currentSignature(),
       format,
       scale,
       quality: state.exportSettings.quality / 100,
@@ -380,6 +408,161 @@ elements.langSelect.addEventListener("change", function () {
 
 elements.showCountryCodeCheckbox.addEventListener("change", function () {
   update({ ...state, showCountryCode: elements.showCountryCodeCheckbox.checked });
+});
+
+const contactInputs: ReadonlyArray<{ input: HTMLInputElement; key: ContactKey }> = [
+  { input: elements.emailInput, key: "email" },
+  { input: elements.websiteInput, key: "website" },
+  { input: elements.linkedinInput, key: "linkedin" },
+  { input: elements.instagramInput, key: "instagram" }
+];
+
+for (const contactInput of contactInputs) {
+  contactInput.input.addEventListener("input", function () {
+    update({ ...state, contacts: { ...state.contacts, [contactInput.key]: contactInput.input.value } });
+  });
+}
+
+elements.showLabelsCheckbox.addEventListener("change", function () {
+  update({ ...state, showLabels: elements.showLabelsCheckbox.checked });
+});
+
+function editingStyle(): TextStyle {
+  return state.textStyles[editingLine];
+}
+
+function updateEditingStyle(style: TextStyle): void {
+  update({ ...state, textStyles: { ...state.textStyles, [editingLine]: style } });
+}
+
+function decimalInput(input: HTMLInputElement, limits: { min: number; max: number }, fallback: number): number {
+  const parsed = Number(input.value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(limits.max, Math.max(limits.min, Math.round(parsed * 100) / 100));
+}
+
+elements.lineSelect.addEventListener("change", function () {
+  const line = elements.lineSelect.value;
+  if (isLineKey(line)) {
+    editingLine = line;
+    render();
+  }
+});
+
+elements.fontSizeInput.addEventListener("input", function () {
+  const style = editingStyle();
+  updateEditingStyle({ ...style, fontSize: clampNumber(elements.fontSizeInput.value, textStyleLimits.fontSize.min, textStyleLimits.fontSize.max, style.fontSize) });
+});
+
+elements.fontWeightInput.addEventListener("change", function () {
+  const fontWeight = Number(elements.fontWeightInput.value);
+  if (isFontWeight(fontWeight)) {
+    updateEditingStyle({ ...editingStyle(), fontWeight });
+  }
+});
+
+elements.spacingTopInput.addEventListener("input", function () {
+  const style = editingStyle();
+  updateEditingStyle({ ...style, spacingTop: clampNumber(elements.spacingTopInput.value, textStyleLimits.spacingTop.min, textStyleLimits.spacingTop.max, style.spacingTop) });
+});
+
+elements.indentInput.addEventListener("input", function () {
+  const style = editingStyle();
+  updateEditingStyle({ ...style, indent: clampNumber(elements.indentInput.value, textStyleLimits.indent.min, textStyleLimits.indent.max, style.indent) });
+});
+
+elements.letterSpacingInput.addEventListener("input", function () {
+  const style = editingStyle();
+  updateEditingStyle({ ...style, letterSpacing: decimalInput(elements.letterSpacingInput, textStyleLimits.letterSpacing, style.letterSpacing) });
+});
+
+elements.lineHeightInput.addEventListener("input", function () {
+  const style = editingStyle();
+  updateEditingStyle({ ...style, lineHeight: decimalInput(elements.lineHeightInput, textStyleLimits.lineHeight, style.lineHeight) });
+});
+
+elements.italicInput.addEventListener("change", function () {
+  updateEditingStyle({ ...editingStyle(), italic: elements.italicInput.checked });
+});
+
+elements.uppercaseInput.addEventListener("change", function () {
+  updateEditingStyle({ ...editingStyle(), uppercase: elements.uppercaseInput.checked });
+});
+
+elements.customColorInput.addEventListener("change", function () {
+  const { color: _color, ...withoutColor } = editingStyle();
+  updateEditingStyle(elements.customColorInput.checked ? { ...withoutColor, color: elements.lineColorInput.value } : withoutColor);
+});
+
+elements.lineColorInput.addEventListener("input", function () {
+  updateEditingStyle({ ...editingStyle(), color: elements.lineColorInput.value });
+});
+
+elements.resetLineStyleBtn.addEventListener("click", function () {
+  updateEditingStyle(defaultTextStyle(editingLine));
+});
+
+function updateLayout(layout: LayoutSettings): void {
+  update({ ...state, layout });
+}
+
+function updateDivider(divider: DividerSettings): void {
+  update({ ...state, divider });
+}
+
+elements.arrangementInput.addEventListener("change", function () {
+  const arrangement = elements.arrangementInput.value;
+  if (isArrangement(arrangement)) {
+    updateLayout({ ...state.layout, arrangement });
+  }
+});
+
+elements.textAlignInput.addEventListener("change", function () {
+  const textAlign = elements.textAlignInput.value;
+  if (isTextAlignment(textAlign)) {
+    updateLayout({ ...state.layout, textAlign });
+  }
+});
+
+elements.paddingXInput.addEventListener("input", function () {
+  updateLayout({ ...state.layout, paddingX: clampNumber(elements.paddingXInput.value, layoutLimits.padding.min, layoutLimits.padding.max, state.layout.paddingX) });
+});
+
+elements.paddingYInput.addEventListener("input", function () {
+  updateLayout({ ...state.layout, paddingY: clampNumber(elements.paddingYInput.value, layoutLimits.padding.min, layoutLimits.padding.max, state.layout.paddingY) });
+});
+
+elements.showDividerInput.addEventListener("change", function () {
+  updateDivider({ ...state.divider, show: elements.showDividerInput.checked });
+});
+
+elements.dividerStyleInput.addEventListener("change", function () {
+  const style = elements.dividerStyleInput.value;
+  if (isDividerStyle(style)) {
+    updateDivider({ ...state.divider, style });
+  }
+});
+
+elements.dividerThicknessInput.addEventListener("input", function () {
+  updateDivider({ ...state.divider, thickness: clampNumber(elements.dividerThicknessInput.value, dividerLimits.thickness.min, dividerLimits.thickness.max, state.divider.thickness) });
+});
+
+elements.dividerHeightModeInput.addEventListener("change", function () {
+  updateDivider({ ...state.divider, heightMode: elements.dividerHeightModeInput.value === "fixed" ? "fixed" : "auto" });
+});
+
+elements.dividerLengthInput.addEventListener("input", function () {
+  updateDivider({ ...state.divider, length: clampNumber(elements.dividerLengthInput.value, dividerLimits.length.min, dividerLimits.length.max, state.divider.length) });
+});
+
+elements.gapBeforeInput.addEventListener("input", function () {
+  updateDivider({ ...state.divider, gapBefore: clampNumber(elements.gapBeforeInput.value, dividerLimits.gap.min, dividerLimits.gap.max, state.divider.gapBefore) });
+});
+
+elements.gapAfterInput.addEventListener("input", function () {
+  updateDivider({ ...state.divider, gapAfter: clampNumber(elements.gapAfterInput.value, dividerLimits.gap.min, dividerLimits.gap.max, state.divider.gapAfter) });
 });
 
 elements.fontFamilyInput.addEventListener("change", function () {

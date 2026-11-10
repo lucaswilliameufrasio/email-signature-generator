@@ -55,6 +55,155 @@
           <input id="phoneInput" type="tel" data-i18n-placeholder="phonePlaceholder">
         </div>
         <label class="checkline"><input type="checkbox" id="showCountryCode" checked> <span data-i18n="showCountryCode">Mostrar código do país</span></label>
+        <div class="row2 contact-fields">
+          <div class="field">
+            <label for="emailInput" data-i18n="emailLabel">E-mail</label>
+            <input id="emailInput" type="text" inputmode="email" autocomplete="email" data-i18n-placeholder="emailPlaceholder">
+          </div>
+          <div class="field">
+            <label for="websiteInput" data-i18n="websiteLabel">Site</label>
+            <input id="websiteInput" type="text" inputmode="url" autocomplete="url" data-i18n-placeholder="websitePlaceholder">
+          </div>
+          <div class="field">
+            <label for="linkedinInput" data-i18n="linkedinLabel">LinkedIn</label>
+            <input id="linkedinInput" type="text" data-i18n-placeholder="linkedinPlaceholder">
+          </div>
+          <div class="field">
+            <label for="instagramInput" data-i18n="instagramLabel">Instagram</label>
+            <input id="instagramInput" type="text" data-i18n-placeholder="instagramPlaceholder">
+          </div>
+        </div>
+        <p class="hint" data-i18n="optionalFieldsHint">Campos vazios não aparecem na assinatura.</p>
+        <label class="checkline"><input type="checkbox" id="showLabels" checked> <span data-i18n="showLabels">Mostrar rótulos (Telefone:, E-mail:...)</span></label>
+      </div>
+
+      <div class="group">
+        <h3 data-i18n="textStyleGroup">Estilo dos textos</h3>
+        <div class="field">
+          <label for="lineSelect" data-i18n="lineSelectLabel">Linha</label>
+          <select id="lineSelect">
+            <option value="name" data-i18n-opt="nameLabel">Nome</option>
+            <option value="role" data-i18n-opt="roleLabel">Cargo</option>
+            <option value="phone" data-i18n-opt="phoneLabel">Telefone</option>
+            <option value="email" data-i18n-opt="emailLabel">E-mail</option>
+            <option value="website" data-i18n-opt="websiteLabel">Site</option>
+            <option value="linkedin" data-i18n-opt="linkedinLabel">LinkedIn</option>
+            <option value="instagram" data-i18n-opt="instagramLabel">Instagram</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="fontSizeInput"><span data-i18n="fontSizeLabel">Tamanho</span>: <span id="fontSizeValue">46px</span></label>
+            <input id="fontSizeInput" type="range" min="8" max="72" step="1">
+          </div>
+          <div class="field">
+            <label for="fontWeightInput" data-i18n="fontWeightLabel">Peso</label>
+            <select id="fontWeightInput">
+              <option value="400" data-i18n-opt="weightRegular">Normal</option>
+              <option value="500" data-i18n-opt="weightMedium">Médio</option>
+              <option value="600" data-i18n-opt="weightSemibold">Seminegrito</option>
+              <option value="700" data-i18n-opt="weightBold">Negrito</option>
+              <option value="800" data-i18n-opt="weightExtraBold">Extra negrito</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="spacingTopInput"><span data-i18n="spacingTopLabel">Espaço acima</span>: <span id="spacingTopValue">0px</span></label>
+            <input id="spacingTopInput" type="range" min="0" max="60" step="1">
+          </div>
+          <div class="field">
+            <label for="indentInput"><span data-i18n="indentLabel">Recuo</span>: <span id="indentValue">0px</span></label>
+            <input id="indentInput" type="range" min="0" max="120" step="1">
+          </div>
+          <div class="field">
+            <label for="letterSpacingInput"><span data-i18n="letterSpacingLabel">Espaço entre letras</span>: <span id="letterSpacingValue">0px</span></label>
+            <input id="letterSpacingInput" type="range" min="-3" max="10" step="0.1">
+          </div>
+          <div class="field">
+            <label for="lineHeightInput"><span data-i18n="lineHeightLabel">Altura da linha</span>: <span id="lineHeightValue">1</span></label>
+            <input id="lineHeightInput" type="range" min="0.8" max="2" step="0.05">
+          </div>
+        </div>
+        <div class="row2">
+          <label class="checkline"><input type="checkbox" id="italicInput"> <span data-i18n="italicLabel">Itálico</span></label>
+          <label class="checkline"><input type="checkbox" id="uppercaseInput"> <span data-i18n="uppercaseLabel">Maiúsculas</span></label>
+        </div>
+        <div class="row2">
+          <label class="checkline"><input type="checkbox" id="customColorInput"> <span data-i18n="customColorLabel">Cor própria</span></label>
+          <input id="lineColorInput" type="color" value="#1f3b73" aria-labelledby="customColorLabelText" disabled>
+        </div>
+        <span id="customColorLabelText" class="visually-hidden" data-i18n="lineColorLabel">Cor da linha</span>
+        <p class="hint" id="lineColorHint"></p>
+        <div class="btns">
+          <button id="resetLineStyleBtn" type="button" class="ghost small" data-i18n="resetLineStyle">Restaurar estilo da linha</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3 data-i18n="layoutGroup">Layout e barra divisória</h3>
+        <div class="row2">
+          <div class="field">
+            <label for="arrangementInput" data-i18n="arrangementLabel">Posição das logos</label>
+            <select id="arrangementInput">
+              <option value="logos-left" data-i18n-opt="arrangementLeft">À esquerda do texto</option>
+              <option value="logos-right" data-i18n-opt="arrangementRight">À direita do texto</option>
+              <option value="logos-top" data-i18n-opt="arrangementTop">Acima do texto</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="textAlignInput" data-i18n="textAlignLabel">Alinhamento do texto</label>
+            <select id="textAlignInput">
+              <option value="left" data-i18n-opt="alignLeft">Esquerda</option>
+              <option value="center" data-i18n-opt="alignCenter">Centro</option>
+              <option value="right" data-i18n-opt="alignRight">Direita</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="paddingXInput"><span data-i18n="paddingXLabel">Margem lateral</span>: <span id="paddingXValue">20px</span></label>
+            <input id="paddingXInput" type="range" min="0" max="80" step="1">
+          </div>
+          <div class="field">
+            <label for="paddingYInput"><span data-i18n="paddingYLabel">Margem superior e inferior</span>: <span id="paddingYValue">18px</span></label>
+            <input id="paddingYInput" type="range" min="0" max="80" step="1">
+          </div>
+        </div>
+
+        <fieldset class="subgroup">
+          <legend data-i18n="dividerLegend">Barra divisória</legend>
+          <label class="checkline"><input type="checkbox" id="showDividerInput" checked> <span data-i18n="showDividerLabel">Mostrar barra</span></label>
+          <div class="row2">
+            <div class="field">
+              <label for="dividerStyleInput" data-i18n="dividerStyleLabel">Estilo</label>
+              <select id="dividerStyleInput">
+                <option value="solid" data-i18n-opt="dividerSolid">Contínua</option>
+                <option value="dashed" data-i18n-opt="dividerDashed">Tracejada</option>
+                <option value="dotted" data-i18n-opt="dividerDotted">Pontilhada</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dividerThicknessInput"><span data-i18n="dividerThicknessLabel">Espessura</span>: <span id="dividerThicknessValue">2px</span></label>
+              <input id="dividerThicknessInput" type="range" min="1" max="12" step="1">
+            </div>
+            <div class="field">
+              <label for="dividerHeightModeInput" data-i18n="dividerLengthModeLabel">Comprimento</label>
+              <select id="dividerHeightModeInput">
+                <option value="auto" data-i18n-opt="dividerLengthAuto">Acompanhar o conteúdo</option>
+                <option value="fixed" data-i18n-opt="dividerLengthFixed">Fixo</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dividerLengthInput"><span data-i18n="dividerLengthLabel">Tamanho fixo</span>: <span id="dividerLengthValue">150px</span></label>
+              <input id="dividerLengthInput" type="range" min="10" max="600" step="1">
+            </div>
+            <div class="field">
+              <label for="gapBeforeInput"><span data-i18n="gapBeforeLabel">Espaço logo → barra</span>: <span id="gapBeforeValue">30px</span></label>
+              <input id="gapBeforeInput" type="range" min="0" max="80" step="1">
+            </div>
+            <div class="field">
+              <label for="gapAfterInput"><span data-i18n="gapAfterLabel">Espaço barra → texto</span>: <span id="gapAfterValue">18px</span></label>
+              <input id="gapAfterInput" type="range" min="0" max="80" step="1">
+            </div>
+          </div>
+        </fieldset>
       </div>
 
       <div class="group">
@@ -172,7 +321,7 @@
           <div class="field">
             <label for="textColorInput" data-i18n="textColorLabel">Cor do texto</label>
             <input id="textColorInput" type="color" value="#1f3b73" aria-describedby="textColorUsage">
-            <span id="textColorUsage" class="mini" data-i18n="textColorUsage">Usada em: nome e telefone</span>
+            <span id="textColorUsage" class="mini" data-i18n="textColorUsage">Usada em: nome, telefone e rótulos</span>
           </div>
           <div class="field">
             <label for="dividerColorInput" data-i18n="dividerColorLabel">Cor do divisor</label>
@@ -185,7 +334,7 @@
           <div class="field">
             <label for="accentColorInput" data-i18n="accentColorLabel">Cor de destaque</label>
             <input id="accentColorInput" type="color" value="#37b37e" aria-describedby="accentColorUsage">
-            <span id="accentColorUsage" class="mini" data-i18n="accentColorUsage">Usada em: cargo</span>
+            <span id="accentColorUsage" class="mini" data-i18n="accentColorUsage">Usada em: cargo e links (e-mail, site, redes)</span>
           </div>
           <div class="field">
             <label for="bgColorInput" data-i18n="bgColorLabel">Cor de fundo</label>
@@ -239,59 +388,7 @@
       </div>
     </aside>
 
-    <section class="preview">
-      <table id="sigTable" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
-              <tr>
-                <td id="logosCell" valign="middle" style="padding-right:16px;">
-                  <table cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td>
-                        <table id="logosHorizontal" cellpadding="0" cellspacing="0" border="0">
-                          <tr>
-                            <td id="mainLogoWrapH" valign="middle" style="padding-right:12px;">
-                              <img id="mainLogo" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;border:0;">
-                            </td>
-                            <td id="sideLogoWrapH" valign="middle" style="display:none;">
-                              <img id="sideLogo" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;border:0;">
-                            </td>
-                          </tr>
-                        </table>
-
-                        <table id="logosVertical" cellpadding="0" cellspacing="0" border="0" style="display:none;">
-                          <tr>
-                            <td id="mainLogoWrapV" style="padding-bottom:8px;">
-                              <img id="mainLogoClone" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;border:0;">
-                            </td>
-                          </tr>
-                          <tr>
-                            <td id="sideLogoWrapV" style="display:none;">
-                              <img id="sideLogoClone" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;border:0;">
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-
-                <td id="dividerCell" valign="middle" style="padding:0 18px;">
-                  <div id="dividerBar" style="width:2px;height:150px;background:#1f3b73;line-height:0;font-size:0;">&nbsp;</div>
-                </td>
-
-                <td valign="middle">
-                  <div id="nameEl" style="font-size:46px;line-height:1;font-weight:800;color:#1f3b73;letter-spacing:-0.3px;">Nome Sobrenome</div>
-                  <div id="roleEl" style="font-size:22px;line-height:1.25;color:#1f3b73;padding-top:10px;">Cargo ou área</div>
-                  <div id="phoneEl" style="font-size:22px;line-height:1.2;color:#1f3b73;padding-top:6px;">Telefone: (00) 0000-0000</div>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </section>
+    <section class="preview" id="signaturePreview" aria-live="off"></section>
   </div>
 
 

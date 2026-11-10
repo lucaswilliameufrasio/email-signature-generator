@@ -1,0 +1,23 @@
+{
+  "skill_name": "web-capability-architecture",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We have a project-management web app. The requested /admin page should list workspaces, invite members, edit SSO settings, and delete workspaces. Propose a maintainable architecture before we code. Deletion behavior and permissions are undocumented, so don't invent them.",
+      "expected_output": "A journey/capability-based proposal separates workspace browsing, member invitations, SSO configuration, and higher-risk deletion. It identifies missing deletion rules and permissions as open questions, keeps routes focused, and proposes explicit data contracts and vertical slices.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Our public product catalog currently renders fixtures. The backend publishes an OpenAPI contract, and we need to replace the mock with live data without changing the visual design. Outline the implementation and tests, including failure behavior.",
+      "expected_output": "Inspect the current repository and actual API contract; define a named catalog data source, validate and map responses into domain models, choose server/browser execution deliberately, avoid fixture fallback on real routes, preserve the UI, and test actual success/error boundaries plus critical browser states.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "A React application already uses React Hook Form and Zod. Add a multi-step organization onboarding form that submits to an existing backend. How should the form and integration be structured?",
+      "expected_output": "Respect the target project's existing form stack, keep form schemas/mapping separate from API DTOs and domain models, validate on both client and server, expose explicit step/submission/error/success states, use a named validated data operation, and test boundary behavior without proposing a stack migration.",
+      "files": []
+    }
+  ]
+}

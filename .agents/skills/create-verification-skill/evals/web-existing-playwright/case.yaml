@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: web-existing-playwright
+expected_outcome: |
+  Reuses the project's existing Playwright setup and local launch path, writes
+  repository-specific verification instructions and a small feature map, and
+  does not add dependencies or claim a run that was not performed.

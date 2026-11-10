@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: unstyled-flash-and-no-definition
+expected_outcome: |
+  Refuses to restyle screen by screen without a design definition, routes
+  through the definition workflow first, and treats the unstyled first paint as
+  a web implementation check verified in the built HTML.

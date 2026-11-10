@@ -1,12 +1,16 @@
-import { toPng } from "html-to-image";
 import { requireElement } from "./dom";
 import { detectLanguage, isLanguage } from "./i18n/language";
-import { isTranslationKey, translations, type Language, type TranslationTable } from "./i18n/translations";
+import { fillTemplate, isTranslationKey, translations, type Language, type TranslationTable } from "./i18n/translations";
 import { defaultMainLogo, defaultSideLogo } from "./signature/default-logos";
 import { palettes } from "./signature/palettes";
 import { formatPhoneLine } from "./signature/phone";
-import { downloadBlob, downloadDataUrl } from "./export/download";
-import { buildHtmlDocument } from "./export/svg-document";
+import { copyRichHtml } from "./export/clipboard";
+import { downloadBlob } from "./export/download";
+import { prepareEmailHtml, type LogoSources } from "./export/email-html";
+import { buildHtmlDocument } from "./export/html-document";
+import { exportImage } from "./export/image-export";
+import { describeFormat, formatFileSize, isImageFormat, type ImageFormat } from "./export/image-format";
+import { createCopyJourney } from "./journey/copy-journey";
 
 const langSelect = requireElement("langSelect", HTMLSelectElement);
 const nameInput = requireElement("nameInput", HTMLInputElement);
@@ -35,6 +39,12 @@ const accentColorInput = requireElement("accentColorInput", HTMLInputElement);
 const bgColorInput = requireElement("bgColorInput", HTMLInputElement);
 const paletteGrid = requireElement("paletteGrid", HTMLDivElement);
 
+const exportFormatInput = requireElement("exportFormatInput", HTMLSelectElement);
+const exportScaleInput = requireElement("exportScaleInput", HTMLSelectElement);
+const exportQualityInput = requireElement("exportQualityInput", HTMLInputElement);
+const qualityField = requireElement("qualityField", HTMLDivElement);
+const qualityValueLabel = requireElement("qualityValueLabel", HTMLSpanElement);
+const webpWarning = requireElement("webpWarning", HTMLParagraphElement);
 const downloadImageBtn = requireElement("downloadImageBtn", HTMLButtonElement);
 const downloadHtmlBtn = requireElement("downloadHtmlBtn", HTMLButtonElement);
 const copyHtmlBtn = requireElement("copyHtmlBtn", HTMLButtonElement);
@@ -82,7 +92,7 @@ function setStatus(statusText: string): void {
 
 function translatedValue(element: Element, attributeName: string): string | undefined {
   const key = element.getAttribute(attributeName);
-  if (key === null || !isTranslationKey(key)) {
+  if (!key || !isTranslationKey(key)) {
     return undefined;
   }
   return currentTexts()[key];
@@ -165,10 +175,15 @@ function syncLogoSources(): void {
   sideLogoClone.src = sideLogo.src;
 }
 
+function setLine(element: HTMLElement, text: string): void {
+  element.textContent = text;
+  element.style.display = text.trim() === "" ? "none" : "";
+}
+
 function applyText(): void {
-  nameEl.textContent = nameInput.value;
-  roleEl.textContent = roleInput.value;
-  phoneEl.textContent = formatPhoneLine(phoneInput.value, showCountryCodeCheckbox.checked, currentTexts().phonePrefix);
+  setLine(nameEl, nameInput.value);
+  setLine(roleEl, roleInput.value);
+  setLine(phoneEl, formatPhoneLine(phoneInput.value, showCountryCodeCheckbox.checked, currentTexts().phonePrefix));
 }
 
 function applyFont(): void {
@@ -182,10 +197,9 @@ function applyFont(): void {
 function applyColors(): void {
   sigTable.style.background = bgColorInput.value;
   nameEl.style.color = textColorInput.value;
-  roleEl.style.color = textColorInput.value;
+  roleEl.style.color = accentColorInput.value;
   phoneEl.style.color = textColorInput.value;
   dividerBar.style.background = dividerColorInput.value;
-  sigTable.setAttribute("data-accent", accentColorInput.value);
 }
 
 function applyLogoSizes(): void {
@@ -297,10 +311,15 @@ function inlineForExport(root: HTMLElement): void {
   root.style.background = bgColorInput.value;
   root.style.minWidth = "0";
 
-  for (const elementId of ["nameEl", "roleEl", "phoneEl"]) {
+  const textColors: Record<string, string> = {
+    nameEl: textColorInput.value,
+    roleEl: accentColorInput.value,
+    phoneEl: textColorInput.value
+  };
+  for (const [elementId, color] of Object.entries(textColors)) {
     const textElement = root.querySelector<HTMLElement>(`#${elementId}`);
     if (textElement) {
-      textElement.style.color = textColorInput.value;
+      textElement.style.color = color;
       textElement.style.fontFamily = fontFamilyInput.value;
     }
   }
@@ -320,24 +339,82 @@ function exportableClone(): HTMLElement {
   return clone;
 }
 
-async function copyHtml(): Promise<void> {
-  await navigator.clipboard.writeText(exportableClone().outerHTML);
+function visibleLogos(): { main: boolean; side: boolean } {
+  return { main: showMainLogoCheckbox.checked, side: showSideLogoCheckbox.checked };
+}
+
+function plainTextSignature(): string {
+  const lines = [nameEl, roleEl, phoneEl]
+    .filter(function (element) {
+      return element.style.display !== "none";
+    })
+    .map(function (element) {
+      return element.textContent;
+    });
+  return lines.join("\n");
+}
+
+async function copySignature(logoSources: LogoSources): Promise<void> {
+  const htmlContent = prepareEmailHtml(exportableClone(), logoSources);
+  await copyRichHtml(htmlContent, plainTextSignature());
   setStatus(currentTexts().statusCopied);
 }
 
-async function downloadImage(): Promise<void> {
-  const dataUrl = await toPng(sigTable, {
-    pixelRatio: 2,
-    cacheBust: true,
-    backgroundColor: "#f3f4f6"
-  });
-  downloadDataUrl(dataUrl, "assinatura.png");
+function selectedFormat(): ImageFormat {
+  const format = exportFormatInput.value;
+  if (isImageFormat(format)) {
+    return format;
+  }
+  return "png";
+}
+
+function selectedScale(): number {
+  const scale = parseInt(exportScaleInput.value, 10);
+  return Number.isFinite(scale) && scale > 0 ? scale : 2;
+}
+
+function selectedQuality(): number {
+  return parseInt(exportQualityInput.value, 10) / 100;
+}
+
+function applyExportControls(): void {
+  const details = describeFormat(selectedFormat());
+  qualityField.hidden = !details.usesQuality;
+  qualityValueLabel.textContent = `${exportQualityInput.value}%`;
+  exportScaleInput.disabled = !details.usesScale;
+  webpWarning.hidden = selectedFormat() !== "webp";
+}
+
+async function downloadImageAs(format: ImageFormat): Promise<void> {
+  const texts = currentTexts();
+  const details = describeFormat(format);
+  const scale = details.usesScale ? selectedScale() : 1;
+  try {
+    const imageBlob = await exportImage({
+      node: sigTable,
+      format,
+      scale,
+      quality: selectedQuality(),
+      backgroundColor: bgColorInput.value
+    });
+    downloadBlob(imageBlob, `${texts.fileBaseName}.${details.extension}`);
+    setStatus(fillTemplate(texts.statusImageDownloadedDetail, {
+      format: details.label,
+      scale: String(scale),
+      size: formatFileSize(imageBlob.size)
+    }));
+  } catch (error) {
+    console.error(error);
+    setStatus(texts.statusImageFailed);
+  }
 }
 
 function downloadHtml(): void {
-  const htmlContent = buildHtmlDocument(exportableClone().outerHTML, currentLanguage());
-  downloadBlob(new Blob([htmlContent], { type: "text/html;charset=utf-8" }), "assinatura.html");
-  setStatus(currentTexts().statusHtmlDownloaded);
+  const texts = currentTexts();
+  const signatureHtml = prepareEmailHtml(exportableClone(), {});
+  const htmlContent = buildHtmlDocument(signatureHtml, currentLanguage(), texts.htmlTitle);
+  downloadBlob(new Blob([htmlContent], { type: "text/html;charset=utf-8" }), `${texts.fileBaseName}.html`);
+  setStatus(texts.statusHtmlDownloaded);
 }
 
 function resetAll(): void {
@@ -392,18 +469,25 @@ logoLayoutInput.addEventListener("change", applyLogosVisibilityAndLayout);
 mainLogoWidthInput.addEventListener("input", applyLogoSizes);
 sideLogoWidthInput.addEventListener("input", applyLogoSizes);
 
-copyHtmlBtn.addEventListener("click", async function () {
-  try {
-    await copyHtml();
-  } catch {
-    setStatus(currentTexts().statusCopyFailed);
+const copyJourney = createCopyJourney({
+  texts: currentTexts,
+  visibleLogos,
+  copySignature,
+  downloadPng: async function () {
+    await downloadImageAs("png");
   }
+});
+
+copyHtmlBtn.addEventListener("click", function () {
+  copyJourney.open();
 });
 
 downloadHtmlBtn.addEventListener("click", downloadHtml);
 downloadImageBtn.addEventListener("click", async function () {
-  await downloadImage();
+  await downloadImageAs(selectedFormat());
 });
+exportFormatInput.addEventListener("change", applyExportControls);
+exportQualityInput.addEventListener("input", applyExportControls);
 resetBtn.addEventListener("click", resetAll);
 
 langSelect.addEventListener("change", applyLanguage);
@@ -415,3 +499,4 @@ langSelect.value = detectLanguage(navigator.language);
 buildPalettes();
 resetAll();
 applyLanguage();
+applyExportControls();

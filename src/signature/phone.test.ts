@@ -8,13 +8,16 @@ describe("formatPhoneLine", function () {
 
   it("removes the leading country code when it is hidden", function () {
     expect(formatPhoneLine("+55 (11) 91234-5678", false, "Telefone: ")).toBe("Telefone: (11) 91234-5678");
+    expect(formatPhoneLine("+1 555 000 0000", false, "Phone: ")).toBe("Phone: 555 000 0000");
   });
 
-  it("keeps the prefix when the phone is empty", function () {
-    expect(formatPhoneLine("", true, "Phone: ")).toBe("Phone: ");
+  it("keeps the area code of a number without country code", function () {
+    expect(formatPhoneLine("11 91234-5678", false, "Telefone: ")).toBe("Telefone: 11 91234-5678");
+    expect(formatPhoneLine("(11) 91234-5678", false, "Telefone: ")).toBe("Telefone: (11) 91234-5678");
   });
 
-  it("currently removes the area code of a number without country code", function () {
-    expect(formatPhoneLine("11 91234-5678", false, "Telefone: ")).toBe("Telefone: 91234-5678");
+  it("returns an empty line when the phone is empty", function () {
+    expect(formatPhoneLine("", true, "Phone: ")).toBe("");
+    expect(formatPhoneLine("   ", false, "Phone: ")).toBe("");
   });
 });

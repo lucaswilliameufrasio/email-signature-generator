@@ -70,11 +70,11 @@
 
         <div class="row2">
           <div class="field">
-            <label data-i18n="mainLogoWidth">Largura logo principal: <span id="mainSizeLabel">260px</span></label>
+            <label for="mainLogoWidthInput"><span data-i18n="mainLogoWidth">Largura logo principal</span>: <span id="mainSizeLabel">260px</span></label>
             <input id="mainLogoWidthInput" type="range" min="60" max="520" step="5" value="260">
           </div>
           <div class="field">
-            <label data-i18n="sideLogoWidth">Largura logo secundária: <span id="sideSizeLabel">120px</span></label>
+            <label for="sideLogoWidthInput"><span data-i18n="sideLogoWidth">Largura logo secundária</span>: <span id="sideSizeLabel">120px</span></label>
             <input id="sideLogoWidthInput" type="range" min="40" max="300" step="5" value="120">
           </div>
         </div>
@@ -108,23 +108,27 @@
 
         <div class="row2">
           <div class="field">
-            <label data-i18n="textColorLabel">Cor do texto</label>
-            <input id="textColorInput" type="color" value="#1f3b73">
+            <label for="textColorInput" data-i18n="textColorLabel">Cor do texto</label>
+            <input id="textColorInput" type="color" value="#1f3b73" aria-describedby="textColorUsage">
+            <span id="textColorUsage" class="mini" data-i18n="textColorUsage">Usada em: nome e telefone</span>
           </div>
           <div class="field">
-            <label data-i18n="dividerColorLabel">Cor do divisor</label>
-            <input id="dividerColorInput" type="color" value="#1f3b73">
+            <label for="dividerColorInput" data-i18n="dividerColorLabel">Cor do divisor</label>
+            <input id="dividerColorInput" type="color" value="#1f3b73" aria-describedby="dividerColorUsage">
+            <span id="dividerColorUsage" class="mini" data-i18n="dividerColorUsage">Usada em: barra divisória</span>
           </div>
         </div>
 
         <div class="row2">
           <div class="field">
-            <label data-i18n="accentColorLabel">Cor de destaque</label>
-            <input id="accentColorInput" type="color" value="#37b37e">
+            <label for="accentColorInput" data-i18n="accentColorLabel">Cor de destaque</label>
+            <input id="accentColorInput" type="color" value="#37b37e" aria-describedby="accentColorUsage">
+            <span id="accentColorUsage" class="mini" data-i18n="accentColorUsage">Usada em: cargo</span>
           </div>
           <div class="field">
-            <label data-i18n="bgColorLabel">Cor de fundo</label>
-            <input id="bgColorInput" type="color" value="#f3f4f6">
+            <label for="bgColorInput" data-i18n="bgColorLabel">Cor de fundo</label>
+            <input id="bgColorInput" type="color" value="#f3f4f6" aria-describedby="bgColorUsage">
+            <span id="bgColorUsage" class="mini" data-i18n="bgColorUsage">Usada em: fundo da assinatura</span>
           </div>
         </div>
       </div>
@@ -138,6 +142,7 @@
             <select id="exportFormatInput">
               <option value="png" data-i18n-opt="optionPng">PNG</option>
               <option value="jpeg" data-i18n-opt="optionJpg">JPG</option>
+              <option value="webp" data-i18n-opt="optionWebp">WebP</option>
               <option value="svg" data-i18n-opt="optionSvg">SVG</option>
             </select>
           </div>
@@ -151,6 +156,12 @@
           </div>
         </div>
 
+        <div id="qualityField" class="field" hidden>
+          <label for="exportQualityInput"><span data-i18n="qualityLabel">Qualidade</span>: <span id="qualityValueLabel">90%</span></label>
+          <input id="exportQualityInput" type="range" min="50" max="100" step="5" value="90">
+        </div>
+        <p id="webpWarning" class="hint warning" data-i18n="webpWarning" hidden>WebP</p>
+
         <div class="btns">
           <button id="downloadImageBtn" class="primary" data-i18n="downloadImage">Baixar imagem</button>
           <button id="downloadHtmlBtn" class="secondary" data-i18n="downloadHtml">Baixar HTML</button>
@@ -158,9 +169,9 @@
           <button id="resetBtn" class="ghost" data-i18n="reset">Resetar</button>
         </div>
 
-        <div id="exportStatus"></div>
+        <div id="exportStatus" role="status" aria-live="polite"></div>
         <p class="hint" data-i18n="hintText">
-          PNG é melhor para transparência e nitidez. JPG é mais leve. SVG é vetorial quando possível, mas imagens enviadas pelo usuário continuam embutidas.
+          PNG
         </p>
       </div>
     </aside>
@@ -178,10 +189,10 @@
                         <table id="logosHorizontal" cellpadding="0" cellspacing="0" border="0">
                           <tr>
                             <td id="mainLogoWrapH" valign="middle" style="padding-right:12px;">
-                              <img id="mainLogo" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
+                              <img id="mainLogo" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
                             </td>
                             <td id="sideLogoWrapH" valign="middle" style="display:none;">
-                              <img id="sideLogo" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
+                              <img id="sideLogo" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
                             </td>
                           </tr>
                         </table>
@@ -189,12 +200,12 @@
                         <table id="logosVertical" cellpadding="0" cellspacing="0" border="0" style="display:none;">
                           <tr>
                             <td id="mainLogoWrapV" style="padding-bottom:8px;">
-                              <img id="mainLogoClone" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
+                              <img id="mainLogoClone" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
                             </td>
                           </tr>
                           <tr>
                             <td id="sideLogoWrapV" style="display:none;">
-                              <img id="sideLogoClone" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
+                              <img id="sideLogoClone" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
                             </td>
                           </tr>
                         </table>
@@ -219,6 +230,76 @@
       </table>
     </section>
   </div>
+
+
+  <dialog id="copyDialog" class="journey" aria-labelledby="journeyTitle">
+    <form method="dialog" class="journey-form">
+      <h2 id="journeyTitle" data-i18n="journeyTitle">Copiar HTML para o seu e-mail</h2>
+
+      <section data-step="client">
+        <p class="journey-question" data-i18n="journeyClientQuestion">Onde você vai usar a assinatura?</p>
+        <div class="journey-options" role="radiogroup">
+          <label class="checkline"><input type="radio" name="emailClient" value="gmail" checked> <span data-i18n="clientGmail">Gmail</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="outlookWeb"> <span data-i18n="clientOutlookWeb">Outlook na web</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="outlookDesktop"> <span data-i18n="clientOutlookDesktop">Outlook para Windows/Mac</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="appleMail"> <span data-i18n="clientAppleMail">Apple Mail</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="other"> <span data-i18n="clientOther">Outro</span></label>
+        </div>
+        <div class="btns">
+          <button type="button" class="primary" data-action="next" data-i18n="journeyNext">Continuar</button>
+          <button type="button" class="ghost" data-action="close" data-i18n="journeyCancel">Cancelar</button>
+        </div>
+      </section>
+
+      <section data-step="hosted" hidden>
+        <p class="journey-question" data-i18n="journeyHostedQuestion">Sua logo está publicada num endereço público (https)?</p>
+        <p class="hint" data-i18n="journeyHostedHelp">Ajuda</p>
+        <div class="btns">
+          <button type="button" class="primary" data-action="hosted-yes" data-i18n="journeyYes">Sim, tenho a URL</button>
+          <button type="button" class="secondary" data-action="hosted-no" data-i18n="journeyNo">Não</button>
+          <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
+        </div>
+      </section>
+
+      <section data-step="image" hidden>
+        <p class="journey-question" data-i18n="journeyImageTitle">Recomendamos exportar como imagem</p>
+        <p class="hint" data-i18n="journeyImageText">Texto</p>
+        <p class="hint" id="journeyImageInsert"></p>
+        <div class="btns">
+          <button type="button" class="primary" data-action="download-image" data-i18n="journeyDownloadImage">Baixar imagem</button>
+          <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
+        </div>
+      </section>
+
+      <section data-step="urls" hidden>
+        <div class="field" id="mainLogoUrlField">
+          <label for="mainLogoUrlInput" data-i18n="journeyUrlMain">URL da logo principal</label>
+          <input id="mainLogoUrlInput" type="url" inputmode="url" placeholder="https://" autocomplete="url">
+          <span class="field-error" id="mainLogoUrlError" role="alert"></span>
+        </div>
+        <div class="field" id="sideLogoUrlField">
+          <label for="sideLogoUrlInput" data-i18n="journeyUrlSide">URL da logo secundária</label>
+          <input id="sideLogoUrlInput" type="url" inputmode="url" placeholder="https://" autocomplete="url">
+          <span class="field-error" id="sideLogoUrlError" role="alert"></span>
+        </div>
+        <div class="btns">
+          <button type="button" class="primary" data-action="test-and-copy" data-i18n="journeyTestAndCopy">Testar e copiar</button>
+          <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
+        </div>
+      </section>
+
+      <section data-step="done" hidden>
+        <p class="journey-question" data-i18n="journeyCopiedTitle">Assinatura copiada</p>
+        <p class="hint" id="journeyPasteInstructions"></p>
+        <p class="hint warning" data-i18n="journeyServerWarning">Aviso</p>
+        <div class="btns">
+          <button type="button" class="primary" data-action="close" data-i18n="journeyClose">Fechar</button>
+        </div>
+      </section>
+
+      <p class="field-error" id="journeyError" role="alert"></p>
+    </form>
+  </dialog>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

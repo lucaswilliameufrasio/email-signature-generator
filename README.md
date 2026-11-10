@@ -7,19 +7,17 @@ A browser-based tool to design, preview, and export email signatures with custom
 ## Features
 
 - Live preview of the signature as you edit
-- Custom text (name, role, phone)
-- Custom colors: text, divider, accent, and background
+- Optional text lines (name, role, phone): empty lines are hidden
+- Custom colors: text, divider, accent (role) and background, each labeled with where it is used
 - Built-in color palettes for quick styling
 - Font family selector (Arial, Trebuchet MS, Segoe UI, Verdana, Tahoma, Georgia, Times New Roman)
 - Logo upload via file picker or drag-and-drop (main and secondary)
 - Horizontal or stacked logo layout
 - Adjustable logo width
-- Export formats: PNG, JPG, SVG
-- Export resolution scaling (1x, 2x, 3x)
-- Copy signature HTML to clipboard
+- Image export: PNG, JPG, WebP and SVG, with 1x/2x/3x scale and quality control for JPG/WebP; the status shows the file size
+- Guided "Copy HTML" flow: asks which email client you use and whether your logo is hosted at a public https URL, tests the URL, copies rich HTML and shows paste instructions; without a hosted logo it recommends image export instead
 - Download signature as standalone HTML file
-- Internationalization: English and Portuguese (Brazilian) — language selector in the panel
-- Auto-detects browser language (falls back to pt-BR)
+- Internationalization: English and Portuguese (Brazilian), auto-detected from the browser (falls back to pt-BR)
 
 ## Usage
 
@@ -28,7 +26,7 @@ A browser-based tool to design, preview, and export email signatures with custom
 3. Upload logos (optional) and choose layout
 4. Adjust colors manually or pick a palette
 5. Preview updates in real time
-6. Export as PNG, JPG, SVG, or copy/download the HTML
+6. Export as PNG, JPG, WebP or SVG, or copy/download the HTML
 
 ## Development
 

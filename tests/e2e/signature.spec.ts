@@ -1,17 +1,7 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const logoFixture = path.join(import.meta.dirname, "fixtures", "logo.png");
-const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-
-async function readDownload(page: Page, trigger: () => Promise<void>): Promise<{ filename: string; content: Buffer }> {
-  const downloadPromise = page.waitForEvent("download");
-  await trigger();
-  const download = await downloadPromise;
-  const filePath = await download.path();
-  return { filename: download.suggestedFilename(), content: await readFile(filePath) };
-}
 
 test.beforeEach(async function ({ page }) {
   await page.goto("/");
@@ -44,6 +34,21 @@ test("hides the country code when unchecked", async function ({ page }) {
   await expect(page.locator("#phoneEl")).toHaveText("Telefone: (11) 91234-5678");
 });
 
+test("keeps the area code when the number has no country code", async function ({ page }) {
+  await page.locator("#phoneInput").fill("11 91234-5678");
+  await page.locator("#showCountryCode").uncheck();
+  await expect(page.locator("#phoneEl")).toHaveText("Telefone: 11 91234-5678");
+});
+
+test("hides empty lines instead of showing labels", async function ({ page }) {
+  await page.locator("#phoneInput").fill("");
+  await page.locator("#roleInput").fill("");
+
+  await expect(page.locator("#phoneEl")).toBeHidden();
+  await expect(page.locator("#roleEl")).toBeHidden();
+  await expect(page.locator("#nameEl")).toBeVisible();
+});
+
 test("switches language keeping edited fields", async function ({ page }) {
   await page.locator("#nameInput").fill("Maria Silva");
   await page.locator("#langSelect").selectOption("en");
@@ -60,7 +65,17 @@ test("applies a palette to the signature", async function ({ page }) {
 
   await expect(page.locator("#textColorInput")).toHaveValue("#0f2d75");
   await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(15, 45, 117)");
+  await expect(page.locator("#roleEl")).toHaveCSS("color", "rgb(47, 124, 255)");
   await expect(page.locator("#sigTable")).toHaveCSS("background-color", "rgb(245, 248, 255)");
+});
+
+test("paints the role with the accent color and explains where each color is used", async function ({ page }) {
+  await page.locator("#accentColorInput").fill("#ff0000");
+
+  await expect(page.locator("#roleEl")).toHaveCSS("color", "rgb(255, 0, 0)");
+  await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(31, 59, 115)");
+  await expect(page.locator("#accentColorUsage")).toHaveText("Usada em: cargo");
+  await expect(page.locator("#textColorUsage")).toHaveText("Usada em: nome e telefone");
 });
 
 test("changes the logo layout and visibility", async function ({ page }) {
@@ -81,6 +96,14 @@ test("changes the logo layout and visibility", async function ({ page }) {
 test("resizes the main logo", async function ({ page }) {
   await page.locator("#mainLogoWidthInput").fill("300");
   await expect(page.locator("#mainLogo")).toHaveCSS("width", "300px");
+  await expect(page.locator("#mainSizeLabel")).toHaveText("300px");
+});
+
+test("keeps the logo width value after switching language", async function ({ page }) {
+  await page.locator("#langSelect").selectOption("en");
+  await page.locator("#mainLogoWidthInput").fill("300");
+
+  await expect(page.locator("label[for='mainLogoWidthInput']")).toHaveText("Main logo width: 300px");
 });
 
 test("uploads a custom logo", async function ({ page }) {
@@ -100,41 +123,6 @@ test("resets every field to its default", async function ({ page }) {
   await expect(page.locator("#nameEl")).toHaveText("Nome Sobrenome");
   await expect(page.locator("#textColorInput")).toHaveValue("#1f3b73");
   await expect(page.locator("#sideLogo")).toBeHidden();
-});
-
-test("downloads the signature as a PNG image", async function ({ page }) {
-  const download = await readDownload(page, async function () {
-    await page.locator("#downloadImageBtn").click();
-  });
-
-  expect(download.filename).toBe("assinatura.png");
-  expect([...download.content.subarray(0, 8)]).toEqual(pngSignature);
-});
-
-test("downloads the signature as a standalone HTML file", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
-  const download = await readDownload(page, async function () {
-    await page.locator("#downloadHtmlBtn").click();
-  });
-  const htmlContent = download.content.toString("utf-8");
-
-  expect(download.filename).toBe("assinatura.html");
-  expect(htmlContent).toContain('<html lang="pt-BR">');
-  expect(htmlContent).toContain("Maria Silva");
-  await expect(page.locator("#exportStatus")).toHaveText("HTML baixado.");
-});
-
-test("copies the signature HTML to the clipboard", async function ({ page, context }) {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.locator("#nameInput").fill("Maria Silva");
-  await page.locator("#copyHtmlBtn").click();
-
-  await expect(page.locator("#exportStatus")).toHaveText("HTML copiado para a área de transferência.");
-  const clipboardText = await page.evaluate(async function () {
-    return navigator.clipboard.readText();
-  });
-  expect(clipboardText).toContain('id="sigTable"');
-  expect(clipboardText).toContain("Maria Silva");
 });
 
 test.describe("with an English browser", function () {

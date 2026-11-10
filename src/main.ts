@@ -1,5 +1,6 @@
 import { getElements } from "./app/elements";
-import { renderSignature } from "./app/render-signature";
+import { createLogoBaker } from "./app/logo-baker";
+import { applyBakedLogo, renderSignature } from "./app/render-signature";
 import { syncControls } from "./app/sync-controls";
 import { copyRichHtml } from "./export/clipboard";
 import { downloadBlob } from "./export/download";
@@ -11,6 +12,10 @@ import { applyStaticTexts } from "./i18n/apply-texts";
 import { detectLanguage, isLanguage } from "./i18n/language";
 import { fillTemplate, translations, type TranslationTable } from "./i18n/translations";
 import { createCopyJourney } from "./journey/copy-journey";
+import { loadImage, naturalSizeOf } from "./logos/bake-logo";
+import type { createCropDialog } from "./logos/crop-dialog";
+import { areaHeightForImage, frameLimits, isAlignment, isFitMode, resetFraming, type LogoFrame } from "./logos/logo-frame";
+import { defaultMainLogo, defaultSideLogo } from "./signature/default-logos";
 import { fontOptions } from "./signature/fonts";
 import { palettes } from "./signature/palettes";
 import {
@@ -18,15 +23,14 @@ import {
   createDefaultState,
   editText,
   exportScales,
-  logoWidthLimits,
   qualityLimits,
+  updateLogo,
+  type LogoTarget,
   type SignatureState,
   type TextField
 } from "./state/signature-state";
 import { browserStorage, clearState, loadState, saveState, type SaveResult } from "./state/storage";
 import { isThemePreference, loadThemePreference, resolveTheme, saveThemePreference, type ThemePreference } from "./theme/theme";
-
-type LogoTarget = "main" | "side";
 
 const elements = getElements();
 const storage = browserStorage();
@@ -36,6 +40,22 @@ let state: SignatureState = loadState(storage, detectLanguage(navigator.language
 let pendingSave: ReturnType<typeof setTimeout> | undefined;
 let lastSaveResult: SaveResult = "saved";
 let renderedLanguage = "";
+let editingTarget: LogoTarget = "main";
+
+const logoBaker = createLogoBaker(function (target, bakedSource) {
+  applyBakedLogo(elements, target, bakedSource);
+}, function (error) {
+  console.error(error);
+});
+let cropDialog: ReturnType<typeof createCropDialog> | undefined;
+
+async function getCropDialog(): Promise<ReturnType<typeof createCropDialog>> {
+  if (cropDialog === undefined) {
+    const cropModule = await import("./logos/crop-dialog");
+    cropDialog = cropModule.createCropDialog();
+  }
+  return cropDialog;
+}
 
 function texts(): TranslationTable {
   return translations[state.language];
@@ -107,8 +127,27 @@ function render(): void {
     buildPalettes();
     renderedLanguage = state.language;
   }
-  syncControls(state, elements);
+  syncControls(state, elements, editingTarget);
   renderSignature(state, elements, texts());
+  for (const target of ["main", "side"] as const) {
+    logoBaker.request(target, logoSource(target), state.logos[target].frame);
+  }
+}
+
+function logoSource(target: LogoTarget): string {
+  const custom = state.logos[target].source;
+  if (custom !== undefined) {
+    return custom;
+  }
+  return target === "main" ? defaultMainLogo : defaultSideLogo;
+}
+
+function editingFrame(): LogoFrame {
+  return state.logos[editingTarget].frame;
+}
+
+function updateEditingFrame(frame: LogoFrame): void {
+  update(updateLogo(state, editingTarget, { ...state.logos[editingTarget], frame }));
 }
 
 function update(nextState: SignatureState): void {
@@ -142,18 +181,23 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-async function setLogoFromFile(file: File, target: LogoTarget): Promise<void> {
+async function setLogoFromFile(file: File): Promise<void> {
   if (!file.type.startsWith("image/")) {
     return;
   }
+  const target = editingTarget;
   const source = await readAsDataUrl(file);
-  const logos = target === "main" ? { ...state.logos, mainSource: source } : { ...state.logos, sideSource: source };
-  update({ ...state, logos });
+  const image = await loadImage(source);
+  const cleanFrame = resetFraming(state.logos[target].frame);
+  const frame = { ...cleanFrame, areaHeight: areaHeightForImage(cleanFrame, naturalSizeOf(image)) };
+  const withLogo = updateLogo(state, target, { source, frame });
+  const visibilityKey = target === "main" ? "showMain" : "showSide";
+  update({ ...withLogo, logos: { ...withLogo.logos, [visibilityKey]: true } });
   setStatus(texts().statusLogoLoaded);
   flushSave();
 }
 
-function wireDropzone(zone: HTMLElement, input: HTMLInputElement, target: LogoTarget): void {
+function wireDropzone(zone: HTMLElement, input: HTMLInputElement): void {
   for (const eventType of ["dragenter", "dragover"]) {
     zone.addEventListener(eventType, function (event) {
       event.preventDefault();
@@ -171,15 +215,63 @@ function wireDropzone(zone: HTMLElement, input: HTMLInputElement, target: LogoTa
   zone.addEventListener("drop", async function (event) {
     const file = event.dataTransfer?.files[0];
     if (file) {
-      await setLogoFromFile(file, target);
+      await setLogoFromFile(file);
     }
   });
   input.addEventListener("change", async function () {
     const file = input.files?.[0];
     if (file) {
-      await setLogoFromFile(file, target);
+      await setLogoFromFile(file);
     }
+    input.value = "";
   });
+}
+
+async function openCrop(): Promise<void> {
+  const target = editingTarget;
+  const source = logoSource(target);
+  const frame = state.logos[target].frame;
+  try {
+    const image = await loadImage(source);
+    const request = {
+      source,
+      natural: naturalSizeOf(image),
+      areaAspectRatio: frame.areaWidth / frame.areaHeight
+    };
+    const dialog = await getCropDialog();
+    const result = await dialog.open(frame.crop === undefined ? request : { ...request, crop: frame.crop });
+    if (result.kind === "cancelled") {
+      return;
+    }
+    const { crop: _previousCrop, ...withoutCrop } = state.logos[target].frame;
+    const nextFrame: LogoFrame = result.crop === undefined ? withoutCrop : { ...withoutCrop, crop: result.crop };
+    update(updateLogo(state, target, { ...state.logos[target], frame: nextFrame }));
+  } catch (error) {
+    console.error(error);
+    setStatus(texts().statusCropFailed);
+  }
+}
+
+async function fitAreaToLogo(): Promise<void> {
+  const target = editingTarget;
+  const image = await loadImage(logoSource(target));
+  const frame = state.logos[target].frame;
+  update(updateLogo(state, target, {
+    ...state.logos[target],
+    frame: { ...frame, areaHeight: areaHeightForImage(frame, naturalSizeOf(image)) }
+  }));
+}
+
+async function downloadAdjustedLogo(target: LogoTarget): Promise<void> {
+  await logoBaker.ready();
+  const bakedSource = logoBaker.baked(target);
+  if (bakedSource === undefined) {
+    return;
+  }
+  const response = await fetch(bakedSource);
+  const currentTexts = texts();
+  const baseName = target === "main" ? currentTexts.logoFileMain : currentTexts.logoFileSide;
+  downloadBlob(await response.blob(), `${baseName}.png`);
 }
 
 function exportableClone(): HTMLElement {
@@ -207,6 +299,7 @@ function plainTextSignature(): string {
 }
 
 async function copySignature(logoSources: LogoSources): Promise<void> {
+  await logoBaker.ready();
   const htmlContent = prepareEmailHtml(exportableClone(), logoSources);
   await copyRichHtml(htmlContent, plainTextSignature());
   setStatus(texts().statusCopied);
@@ -217,6 +310,7 @@ async function downloadImageAs(format: ImageFormat): Promise<void> {
   const details = describeFormat(format);
   const scale = details.usesScale ? state.exportSettings.scale : 1;
   try {
+    await logoBaker.ready();
     const imageBlob = await exportImage({
       node: elements.sigTable,
       format,
@@ -236,7 +330,8 @@ async function downloadImageAs(format: ImageFormat): Promise<void> {
   }
 }
 
-function downloadHtml(): void {
+async function downloadHtml(): Promise<void> {
+  await logoBaker.ready();
   const currentTexts = texts();
   const signatureHtml = prepareEmailHtml(exportableClone(), {});
   const htmlContent = buildHtmlDocument(signatureHtml, state.language, currentTexts.htmlTitle);
@@ -249,8 +344,7 @@ function resetAll(): void {
     return;
   }
   clearState(storage);
-  elements.mainLogoInput.value = "";
-  elements.sideLogoInput.value = "";
+  elements.logoFileInput.value = "";
   state = createDefaultState(state.language);
   lastSaveResult = "saved";
   render();
@@ -305,16 +399,75 @@ elements.logoLayoutInput.addEventListener("change", function () {
   update({ ...state, logos: { ...state.logos, layout } });
 });
 
-elements.mainLogoWidthInput.addEventListener("input", function () {
-  const limits = logoWidthLimits.main;
-  const mainWidth = clampNumber(elements.mainLogoWidthInput.value, limits.min, limits.max, state.logos.mainWidth);
-  update({ ...state, logos: { ...state.logos, mainWidth } });
+for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="logoTarget"]')) {
+  radio.addEventListener("change", function () {
+    if (radio.checked) {
+      editingTarget = radio.value === "side" ? "side" : "main";
+      render();
+    }
+  });
+}
+
+function clampedInput(input: HTMLInputElement, limits: { min: number; max: number }, fallback: number): number {
+  return clampNumber(input.value, limits.min, limits.max, fallback);
+}
+
+elements.areaWidthInput.addEventListener("input", function () {
+  const frame = editingFrame();
+  updateEditingFrame({ ...frame, areaWidth: clampedInput(elements.areaWidthInput, frameLimits.areaWidth[editingTarget], frame.areaWidth) });
 });
 
-elements.sideLogoWidthInput.addEventListener("input", function () {
-  const limits = logoWidthLimits.side;
-  const sideWidth = clampNumber(elements.sideLogoWidthInput.value, limits.min, limits.max, state.logos.sideWidth);
-  update({ ...state, logos: { ...state.logos, sideWidth } });
+elements.areaHeightInput.addEventListener("input", function () {
+  const frame = editingFrame();
+  updateEditingFrame({ ...frame, areaHeight: clampedInput(elements.areaHeightInput, frameLimits.areaHeight, frame.areaHeight) });
+});
+
+elements.zoomInput.addEventListener("input", function () {
+  const frame = editingFrame();
+  updateEditingFrame({ ...frame, zoom: clampedInput(elements.zoomInput, frameLimits.zoom, frame.zoom) });
+});
+
+elements.offsetXInput.addEventListener("input", function () {
+  const frame = editingFrame();
+  updateEditingFrame({ ...frame, offsetX: clampedInput(elements.offsetXInput, frameLimits.offset, frame.offsetX) });
+});
+
+elements.offsetYInput.addEventListener("input", function () {
+  const frame = editingFrame();
+  updateEditingFrame({ ...frame, offsetY: clampedInput(elements.offsetYInput, frameLimits.offset, frame.offsetY) });
+});
+
+elements.fitModeInput.addEventListener("change", function () {
+  const fit = elements.fitModeInput.value;
+  if (isFitMode(fit)) {
+    updateEditingFrame({ ...editingFrame(), fit });
+  }
+});
+
+for (const button of document.querySelectorAll<HTMLButtonElement>(".align-grid button[data-align]")) {
+  button.addEventListener("click", function () {
+    const align = button.dataset["align"];
+    if (isAlignment(align)) {
+      updateEditingFrame({ ...editingFrame(), align });
+    }
+  });
+}
+
+elements.fitAreaBtn.addEventListener("click", async function () {
+  await fitAreaToLogo();
+});
+
+elements.cropBtn.addEventListener("click", async function () {
+  await openCrop();
+});
+
+elements.removeCropBtn.addEventListener("click", function () {
+  const { crop: _crop, ...frame } = editingFrame();
+  updateEditingFrame(frame);
+});
+
+elements.resetFrameBtn.addEventListener("click", function () {
+  updateEditingFrame(resetFraming(editingFrame()));
 });
 
 const colorInputs = [
@@ -358,20 +511,22 @@ const copyJourney = createCopyJourney({
   copySignature,
   downloadPng: async function () {
     await downloadImageAs("png");
-  }
+  },
+  downloadAdjustedLogo
 });
 
 elements.copyHtmlBtn.addEventListener("click", function () {
   copyJourney.open();
 });
-elements.downloadHtmlBtn.addEventListener("click", downloadHtml);
+elements.downloadHtmlBtn.addEventListener("click", async function () {
+  await downloadHtml();
+});
 elements.downloadImageBtn.addEventListener("click", async function () {
   await downloadImageAs(state.exportSettings.format);
 });
 elements.resetBtn.addEventListener("click", resetAll);
 
-wireDropzone(elements.mainDrop, elements.mainLogoInput, "main");
-wireDropzone(elements.sideDrop, elements.sideLogoInput, "side");
+wireDropzone(elements.logoDrop, elements.logoFileInput);
 
 for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="themePreference"]')) {
   radio.addEventListener("change", function () {

@@ -93,21 +93,21 @@ test("changes the logo layout and visibility", async function ({ page }) {
   await expect(page.locator("#dividerCell")).toBeHidden();
 });
 
-test("resizes the main logo", async function ({ page }) {
-  await page.locator("#mainLogoWidthInput").fill("300");
+test("resizes the main logo area", async function ({ page }) {
+  await page.locator("#areaWidthInput").fill("300");
   await expect(page.locator("#mainLogo")).toHaveCSS("width", "300px");
-  await expect(page.locator("#mainSizeLabel")).toHaveText("300px");
+  await expect(page.locator("#areaWidthValue")).toHaveText("300px");
 });
 
-test("keeps the logo width value after switching language", async function ({ page }) {
+test("keeps the logo area value after switching language", async function ({ page }) {
   await page.locator("#langSelect").selectOption("en");
-  await page.locator("#mainLogoWidthInput").fill("300");
+  await page.locator("#areaWidthInput").fill("300");
 
-  await expect(page.locator("label[for='mainLogoWidthInput']")).toHaveText("Main logo width: 300px");
+  await expect(page.locator("label[for='areaWidthInput']")).toHaveText("Width: 300px");
 });
 
 test("uploads a custom logo", async function ({ page }) {
-  await page.locator("#mainLogoInput").setInputFiles(logoFixture);
+  await page.locator("#logoFileInput").setInputFiles(logoFixture);
 
   await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
   await expect(page.locator("#mainLogoClone")).toHaveAttribute("src", /^data:image\/png;base64,/);

@@ -11,9 +11,12 @@ A browser-based tool to design, preview, and export email signatures with custom
 - Custom colors: text, divider, accent (role) and background, each labeled with where it is used
 - Built-in color palettes for quick styling
 - Font family selector (Arial, Trebuchet MS, Segoe UI, Verdana, Tahoma, Georgia, Times New Roman)
-- Logo upload via file picker or drag-and-drop (main and secondary)
-- Horizontal or stacked logo layout
-- Adjustable logo width
+- Logo upload via file picker or drag-and-drop (main and secondary), side by side or stacked
+- Logo editor, per logo:
+  - occupied area (width and height) separate from the logo size, with "fit area to logo"
+  - fit mode (show whole logo or fill the area), size (zoom), 9-point alignment and horizontal/vertical nudge
+  - interactive crop (free, match area, 1:1, 4:3, 16:9) powered by [Cropper.js](https://github.com/fengyuanchen/cropperjs), loaded only when used
+  - adjustments are baked into a fixed-size PNG, so exported images and HTML look the same in every email client (see `docs/adr/0002-bake-logo-adjustments-into-exported-image.md`)
 - Image export: PNG, JPG, WebP and SVG, with 1x/2x/3x scale and quality control for JPG/WebP; the status shows the file size
 - Guided "Copy HTML" flow: asks which email client you use and whether your logo is hosted at a public https URL, tests the URL, copies rich HTML and shows paste instructions; without a hosted logo it recommends image export instead
 - Download signature as standalone HTML file
@@ -74,6 +77,7 @@ Architecture decisions are recorded in `docs/adr/`.
 ## Tech Stack
 
 - TypeScript and plain DOM (no UI framework), built with [Vite](https://vite.dev)
-- [html-to-image](https://github.com/bubkoo/html-to-image) for PNG export
+- [html-to-image](https://github.com/bubkoo/html-to-image) for image export
+- [Cropper.js](https://github.com/fengyuanchen/cropperjs) for logo cropping
 - [Vitest](https://vitest.dev) and [Playwright](https://playwright.dev) for tests
 - Static output, deployed to GitHub Pages

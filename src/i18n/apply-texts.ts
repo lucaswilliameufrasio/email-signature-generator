@@ -29,4 +29,12 @@ export function applyStaticTexts(root: ParentNode, texts: TranslationTable): voi
       element.alt = text;
     }
   }
+
+  for (const element of root.querySelectorAll("[data-i18n-aria]")) {
+    const text = translatedValue(element, "data-i18n-aria", texts);
+    if (text !== undefined) {
+      element.setAttribute("aria-label", text);
+      element.setAttribute("title", text);
+    }
+  }
 }

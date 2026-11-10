@@ -16,6 +16,7 @@ export type CopyJourneyDependencies = {
   visibleLogos: () => VisibleLogos;
   copySignature: (logoSources: LogoSources) => Promise<void>;
   downloadPng: () => Promise<void>;
+  downloadAdjustedLogo: (target: "main" | "side") => Promise<void>;
 };
 
 type LogoUrlField = {
@@ -66,6 +67,9 @@ export function createCopyJourney(dependencies: CopyJourneyDependencies): { open
     const visibleLogos = dependencies.visibleLogos();
     mainUrl.field.hidden = !visibleLogos.main;
     sideUrl.field.hidden = !visibleLogos.side;
+    for (const button of dialog.querySelectorAll<HTMLButtonElement>('button[data-action^="download-logo-"]')) {
+      button.hidden = button.dataset["action"] === "download-logo-main" ? !visibleLogos.main : !visibleLogos.side;
+    }
 
     const firstControl = dialog.querySelector<HTMLElement>(`section[data-step="${currentStep}"] input:not([type="radio"]), section[data-step="${currentStep}"] button`);
     firstControl?.focus();
@@ -171,6 +175,10 @@ export function createCopyJourney(dependencies: CopyJourneyDependencies): { open
     }
     if (action === "download-image") {
       await dependencies.downloadPng();
+      return;
+    }
+    if (action === "download-logo-main" || action === "download-logo-side") {
+      await dependencies.downloadAdjustedLogo(action === "download-logo-main" ? "main" : "side");
       return;
     }
     if (action === "test-and-copy") {

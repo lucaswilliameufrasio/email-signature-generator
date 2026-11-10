@@ -81,33 +81,82 @@
           </select>
         </div>
 
-        <div class="row2">
-          <div class="field">
-            <label for="mainLogoWidthInput"><span data-i18n="mainLogoWidth">Largura logo principal</span>: <span id="mainSizeLabel">260px</span></label>
-            <input id="mainLogoWidthInput" type="range" min="60" max="520" step="5" value="260">
+        <div class="logo-editor">
+          <div class="segmented" role="radiogroup" aria-labelledby="logoTargetLabel">
+            <span id="logoTargetLabel" class="segmented-title" data-i18n="logoTargetLabel">Editar</span>
+            <label><input type="radio" name="logoTarget" value="main" checked> <span data-i18n="logoTargetMain">Logo principal</span></label>
+            <label><input type="radio" name="logoTarget" value="side"> <span data-i18n="logoTargetSide">Logo secundária</span></label>
           </div>
-          <div class="field">
-            <label for="sideLogoWidthInput"><span data-i18n="sideLogoWidth">Largura logo secundária</span>: <span id="sideSizeLabel">120px</span></label>
-            <input id="sideLogoWidthInput" type="range" min="40" max="300" step="5" value="120">
-          </div>
-        </div>
 
-        <div class="field">
-          <label data-i18n="mainLogoLabel">Logo principal</label>
-          <div id="mainDrop" class="dropzone">
+          <div id="logoDrop" class="dropzone">
             <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
-            <span data-i18n="dropzoneOr">ou selecione um arquivo:</span>
-            <input id="mainLogoInput" type="file" accept="image/*">
+            <label for="logoFileInput" data-i18n="dropzoneOr">ou selecione um arquivo:</label>
+            <input id="logoFileInput" type="file" accept="image/*">
           </div>
-        </div>
 
-        <div class="field">
-          <label data-i18n="sideLogoLabel">Logo secundária</label>
-          <div id="sideDrop" class="dropzone">
-            <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
-            <span data-i18n="dropzoneOr">ou selecione um arquivo:</span>
-            <input id="sideLogoInput" type="file" accept="image/*">
-          </div>
+          <fieldset class="subgroup">
+            <legend data-i18n="areaLegend">Área ocupada na assinatura</legend>
+            <div class="row2">
+              <div class="field">
+                <label for="areaWidthInput"><span data-i18n="areaWidthLabel">Largura</span>: <span id="areaWidthValue">260px</span></label>
+                <input id="areaWidthInput" type="range" min="40" max="520" step="1" value="260">
+              </div>
+              <div class="field">
+                <label for="areaHeightInput"><span data-i18n="areaHeightLabel">Altura</span>: <span id="areaHeightValue">79px</span></label>
+                <input id="areaHeightInput" type="range" min="20" max="240" step="1" value="79">
+              </div>
+            </div>
+            <button id="fitAreaBtn" type="button" class="ghost small" data-i18n="fitAreaButton">Ajustar área à logo</button>
+          </fieldset>
+
+          <fieldset class="subgroup">
+            <legend data-i18n="framingLegend">Logo dentro da área</legend>
+            <div class="row2">
+              <div class="field">
+                <label for="fitModeInput" data-i18n="fitModeLabel">Encaixe</label>
+                <select id="fitModeInput">
+                  <option value="contain" data-i18n-opt="fitContain">Caber inteira</option>
+                  <option value="cover" data-i18n-opt="fitCover">Preencher a área</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="zoomInput"><span data-i18n="zoomLabel">Tamanho da logo</span>: <span id="zoomValue">100%</span></label>
+                <input id="zoomInput" type="range" min="10" max="400" step="1" value="100">
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-title" id="alignLabel" data-i18n="alignLabel">Alinhamento</span>
+              <div class="align-grid" role="group" aria-labelledby="alignLabel">
+                <button type="button" data-align="top-left" data-i18n-aria="alignTopLeft" aria-label="Topo à esquerda"></button>
+                <button type="button" data-align="top" data-i18n-aria="alignTop" aria-label="Topo"></button>
+                <button type="button" data-align="top-right" data-i18n-aria="alignTopRight" aria-label="Topo à direita"></button>
+                <button type="button" data-align="left" data-i18n-aria="alignLeft" aria-label="Esquerda"></button>
+                <button type="button" data-align="center" data-i18n-aria="alignCenter" aria-label="Centro"></button>
+                <button type="button" data-align="right" data-i18n-aria="alignRight" aria-label="Direita"></button>
+                <button type="button" data-align="bottom-left" data-i18n-aria="alignBottomLeft" aria-label="Base à esquerda"></button>
+                <button type="button" data-align="bottom" data-i18n-aria="alignBottom" aria-label="Base"></button>
+                <button type="button" data-align="bottom-right" data-i18n-aria="alignBottomRight" aria-label="Base à direita"></button>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label for="offsetXInput"><span data-i18n="offsetXLabel">Ajuste horizontal</span>: <span id="offsetXValue">0px</span></label>
+                <input id="offsetXInput" type="range" min="-300" max="300" step="1" value="0">
+              </div>
+              <div class="field">
+                <label for="offsetYInput"><span data-i18n="offsetYLabel">Ajuste vertical</span>: <span id="offsetYValue">0px</span></label>
+                <input id="offsetYInput" type="range" min="-300" max="300" step="1" value="0">
+              </div>
+            </div>
+
+            <div class="btns">
+              <button id="cropBtn" type="button" class="secondary small" data-i18n="cropButton">Cortar imagem</button>
+              <button id="removeCropBtn" type="button" class="ghost small" data-i18n="removeCropButton" hidden>Remover corte</button>
+              <button id="resetFrameBtn" type="button" class="ghost small" data-i18n="resetFrameButton">Restaurar enquadramento</button>
+            </div>
+          </fieldset>
         </div>
       </div>
 
@@ -203,10 +252,10 @@
                         <table id="logosHorizontal" cellpadding="0" cellspacing="0" border="0">
                           <tr>
                             <td id="mainLogoWrapH" valign="middle" style="padding-right:12px;">
-                              <img id="mainLogo" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
+                              <img id="mainLogo" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;border:0;">
                             </td>
                             <td id="sideLogoWrapH" valign="middle" style="display:none;">
-                              <img id="sideLogo" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
+                              <img id="sideLogo" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;border:0;">
                             </td>
                           </tr>
                         </table>
@@ -214,12 +263,12 @@
                         <table id="logosVertical" cellpadding="0" cellspacing="0" border="0" style="display:none;">
                           <tr>
                             <td id="mainLogoWrapV" style="padding-bottom:8px;">
-                              <img id="mainLogoClone" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
+                              <img id="mainLogoClone" data-logo="main" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;border:0;">
                             </td>
                           </tr>
                           <tr>
                             <td id="sideLogoWrapV" style="display:none;">
-                              <img id="sideLogoClone" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
+                              <img id="sideLogoClone" data-logo="side" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;border:0;">
                             </td>
                           </tr>
                         </table>
@@ -296,6 +345,11 @@
           <input id="sideLogoUrlInput" type="url" inputmode="url" placeholder="https://" autocomplete="url">
           <span class="field-error" id="sideLogoUrlError" role="alert"></span>
         </div>
+        <p class="hint" data-i18n="journeyAdjustedLogoHint">Logo ajustada</p>
+        <div class="btns">
+          <button type="button" class="ghost small" data-action="download-logo-main" data-i18n="journeyDownloadMainLogo">Baixar logo principal ajustada</button>
+          <button type="button" class="ghost small" data-action="download-logo-side" data-i18n="journeyDownloadSideLogo">Baixar logo secundária ajustada</button>
+        </div>
         <div class="btns">
           <button type="button" class="primary" data-action="test-and-copy" data-i18n="journeyTestAndCopy">Testar e copiar</button>
           <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
@@ -313,6 +367,24 @@
 
       <p class="field-error" id="journeyError" role="alert"></p>
     </form>
+  </dialog>
+
+  <dialog id="cropDialog" class="journey crop-dialog" aria-labelledby="cropTitle">
+    <h2 id="cropTitle" data-i18n="cropTitle">Cortar imagem</h2>
+    <p class="hint" data-i18n="cropHint">Arraste a seleção e os cantos para escolher a parte da imagem que vai na assinatura.</p>
+    <div class="crop-aspects" role="group" aria-labelledby="cropAspectLabel">
+      <span id="cropAspectLabel" class="field-title" data-i18n="cropAspectLabel">Proporção</span>
+      <button type="button" class="ghost small" data-aspect="free" data-i18n="cropAspectFree" aria-pressed="true">Livre</button>
+      <button type="button" class="ghost small" data-aspect="area" data-i18n="cropAspectArea" aria-pressed="false">Igual à área</button>
+      <button type="button" class="ghost small" data-aspect="1" aria-pressed="false">1:1</button>
+      <button type="button" class="ghost small" data-aspect="1.3333" aria-pressed="false">4:3</button>
+      <button type="button" class="ghost small" data-aspect="1.7778" aria-pressed="false">16:9</button>
+    </div>
+    <div id="cropArea" class="crop-area"></div>
+    <div class="btns">
+      <button id="cropApplyBtn" type="button" class="primary" data-i18n="cropApply">Aplicar corte</button>
+      <button id="cropCancelBtn" type="button" class="ghost" data-i18n="journeyCancel">Cancelar</button>
+    </div>
   </dialog>
 
   <script type="module" src="/src/main.ts"></script>

@@ -42,12 +42,13 @@ describe("signature storage", function () {
   it("drops custom logos when the full state does not fit", function () {
     const storage = new MemoryStorage();
     const state = createDefaultState("en");
-    state.logos.mainSource = `data:image/png;base64,${"A".repeat(5000)}`;
+    state.logos.main.source = `data:image/png;base64,${"A".repeat(5000)}`;
     storage.maxLength = 3000;
 
     expect(saveState(storage, state)).toBe("savedWithoutLogos");
     const loaded = loadState(storage, "en");
-    expect(loaded.logos.mainSource).toBeUndefined();
+    expect(loaded.logos.main.source).toBeUndefined();
+    expect(loaded.logos.main.frame).toEqual(state.logos.main.frame);
     expect(loaded.name).toBe(state.name);
   });
 

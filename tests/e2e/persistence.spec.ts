@@ -15,8 +15,9 @@ test("restores the signature after reloading", async function ({ page }) {
   await page.locator("#paletteGrid .palette").nth(2).click();
   await page.locator("#showSideLogo").check();
   await page.locator("#logoLayoutInput").selectOption("vertical");
-  await page.locator("#mainLogoWidthInput").fill("300");
-  await page.locator("#mainLogoInput").setInputFiles(logoFixture);
+  await page.locator("#areaWidthInput").fill("300");
+  await page.locator("#logoFileInput").setInputFiles(logoFixture);
+  await page.locator("#zoomInput").fill("80");
   await page.locator("#exportFormatInput").selectOption("webp");
   await page.locator("#exportQualityInput").fill("70");
   await page.locator("#exportScaleInput").selectOption("3");
@@ -31,7 +32,8 @@ test("restores the signature after reloading", async function ({ page }) {
   await expect(page.locator("#textColorInput")).toHaveValue("#0f2d75");
   await expect(page.locator("#showSideLogo")).toBeChecked();
   await expect(page.locator("#logosVertical")).toBeVisible();
-  await expect(page.locator("#mainLogoWidthInput")).toHaveValue("300");
+  await expect(page.locator("#areaWidthInput")).toHaveValue("300");
+  await expect(page.locator("#zoomInput")).toHaveValue("80");
   await expect(page.locator("#mainLogoClone")).toHaveAttribute("src", /^data:image\/png;base64,/);
   await expect(page.locator("#exportFormatInput")).toHaveValue("webp");
   await expect(page.locator("#exportQualityInput")).toHaveValue("70");
@@ -90,12 +92,16 @@ test("keeps working when the logo is too large to save", async function ({ page 
     };
   });
   await page.locator("#nameInput").fill("Maria Silva");
-  await page.locator("#mainLogoInput").setInputFiles(path.join(import.meta.dirname, "fixtures", "logo.png"));
+  await page.locator("#logoFileInput").setInputFiles(logoFixture);
 
   await expect(page.locator("#exportStatus")).toContainText("grandes demais para salvar");
   await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
 
   await page.reload();
   await expect(page.locator("#nameEl")).toHaveText("Maria Silva");
-  await expect(page.locator("#mainLogo")).not.toHaveAttribute("src", /^data:image\/png;base64,/);
+  const savedSource = await page.evaluate(function () {
+    const saved: unknown = JSON.parse(localStorage.getItem("email-signature-generator:state:v1") ?? "{}");
+    return JSON.stringify(saved).includes("data:image/png");
+  });
+  expect(savedSource).toBe(false);
 });

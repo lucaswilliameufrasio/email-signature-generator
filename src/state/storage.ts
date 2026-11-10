@@ -29,8 +29,14 @@ export function loadState(storage: KeyValueStorage | undefined, fallbackLanguage
 }
 
 function withoutLogos(state: SignatureState): SignatureState {
-  const { mainSource: _mainSource, sideSource: _sideSource, ...logos } = state.logos;
-  return { ...state, logos };
+  return {
+    ...state,
+    logos: {
+      ...state.logos,
+      main: { frame: state.logos.main.frame },
+      side: { frame: state.logos.side.frame }
+    }
+  };
 }
 
 export function saveState(storage: KeyValueStorage | undefined, state: SignatureState): SaveResult {

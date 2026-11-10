@@ -1,7 +1,7 @@
 import type { TranslationTable } from "../i18n/translations";
-import { defaultMainLogo, defaultSideLogo } from "../signature/default-logos";
 import { formatPhoneLine } from "../signature/phone";
 import type { SignatureState } from "../state/signature-state";
+import type { LogoFrame } from "../logos/logo-frame";
 import type { AppElements } from "./elements";
 
 function setLine(element: HTMLElement, text: string, color: string, fontFamily: string): void {
@@ -11,14 +11,15 @@ function setLine(element: HTMLElement, text: string, color: string, fontFamily: 
   element.style.fontFamily = fontFamily;
 }
 
-function setSource(image: HTMLImageElement, source: string): void {
-  if (image.getAttribute("src") !== source) {
-    image.src = source;
-  }
-}
-
 function showWhen(element: HTMLElement, visible: boolean): void {
   element.style.display = visible ? "" : "none";
+}
+
+function sizeLogo(image: HTMLImageElement, frame: LogoFrame): void {
+  image.width = frame.areaWidth;
+  image.height = frame.areaHeight;
+  image.style.width = `${frame.areaWidth}px`;
+  image.style.height = `${frame.areaHeight}px`;
 }
 
 export function renderSignature(state: SignatureState, elements: AppElements, texts: TranslationTable): void {
@@ -32,17 +33,11 @@ export function renderSignature(state: SignatureState, elements: AppElements, te
   setLine(elements.roleEl, state.role, colors.accent, state.fontFamily);
   setLine(elements.phoneEl, formatPhoneLine(state.phone, state.showCountryCode, texts.phonePrefix), colors.text, state.fontFamily);
 
-  const mainSource = logos.mainSource ?? defaultMainLogo;
-  const sideSource = logos.sideSource ?? defaultSideLogo;
   for (const image of [elements.mainLogo, elements.mainLogoClone]) {
-    setSource(image, mainSource);
-    image.style.width = `${logos.mainWidth}px`;
-    image.style.height = "auto";
+    sizeLogo(image, logos.main.frame);
   }
   for (const image of [elements.sideLogo, elements.sideLogoClone]) {
-    setSource(image, sideSource);
-    image.style.width = `${logos.sideWidth}px`;
-    image.style.height = "auto";
+    sizeLogo(image, logos.side.frame);
   }
 
   const hasAnyLogo = logos.showMain || logos.showSide;
@@ -57,4 +52,11 @@ export function renderSignature(state: SignatureState, elements: AppElements, te
   showWhen(elements.sideLogoWrapV, logos.showSide);
   elements.mainLogoWrapH.style.paddingRight = logos.showMain && logos.showSide ? "12px" : "0";
   elements.mainLogoWrapV.style.paddingBottom = logos.showMain && logos.showSide ? "8px" : "0";
+}
+
+export function applyBakedLogo(elements: AppElements, target: "main" | "side", bakedSource: string): void {
+  const images = target === "main" ? [elements.mainLogo, elements.mainLogoClone] : [elements.sideLogo, elements.sideLogoClone];
+  for (const image of images) {
+    image.src = bakedSource;
+  }
 }

@@ -2,12 +2,20 @@ import { isLanguage } from "../i18n/language";
 import { translations, type Language } from "../i18n/translations";
 import { isImageFormat, type ImageFormat } from "../export/image-format";
 import { fontOptions, isKnownFont } from "../signature/fonts";
+import { frameLimits, isAlignment, isFitMode, type CropRect, type LogoFrame } from "../logos/logo-frame";
 
 export const textFields = ["name", "role", "phone"] as const;
 
 export type TextField = (typeof textFields)[number];
 
 export type LogoLayout = "horizontal" | "vertical";
+
+export type LogoTarget = "main" | "side";
+
+export type LogoSlot = {
+  source?: string;
+  frame: LogoFrame;
+};
 
 export type SignatureState = {
   language: Language;
@@ -21,10 +29,8 @@ export type SignatureState = {
     showMain: boolean;
     showSide: boolean;
     layout: LogoLayout;
-    mainWidth: number;
-    sideWidth: number;
-    mainSource?: string;
-    sideSource?: string;
+    main: LogoSlot;
+    side: LogoSlot;
   };
   colors: {
     text: string;
@@ -38,11 +44,6 @@ export type SignatureState = {
     quality: number;
   };
 };
-
-export const logoWidthLimits = {
-  main: { min: 60, max: 520 },
-  side: { min: 40, max: 300 }
-} as const;
 
 export const exportScales = [1, 2, 3] as const;
 
@@ -61,6 +62,22 @@ export function translatedDefaultText(language: Language, field: TextField): str
   return texts.phoneValue;
 }
 
+export function defaultFrame(target: LogoTarget): LogoFrame {
+  return {
+    areaWidth: target === "main" ? 260 : 120,
+    areaHeight: target === "main" ? 79 : 102,
+    fit: "contain",
+    align: "center",
+    zoom: 100,
+    offsetX: 0,
+    offsetY: 0
+  };
+}
+
+export function updateLogo(state: SignatureState, target: LogoTarget, slot: LogoSlot): SignatureState {
+  return { ...state, logos: { ...state.logos, [target]: slot } };
+}
+
 export function createDefaultState(language: Language): SignatureState {
   return {
     language,
@@ -74,8 +91,8 @@ export function createDefaultState(language: Language): SignatureState {
       showMain: true,
       showSide: false,
       layout: "horizontal",
-      mainWidth: 260,
-      sideWidth: 120
+      main: { frame: defaultFrame("main") },
+      side: { frame: defaultFrame("side") }
     },
     colors: {
       text: "#1f3b73",
@@ -144,6 +161,66 @@ function readImageSource(source: Record<string, unknown>, key: string): string |
   return undefined;
 }
 
+function readCrop(source: Record<string, unknown>): CropRect | undefined {
+  const value = source["crop"];
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  const crop = {
+    x: value["x"],
+    y: value["y"],
+    width: value["width"],
+    height: value["height"]
+  };
+  const numbers = [crop.x, crop.y, crop.width, crop.height];
+  const allValid = numbers.every(function (number) {
+    return typeof number === "number" && Number.isFinite(number) && number >= 0;
+  });
+  if (!allValid || typeof crop.x !== "number" || typeof crop.y !== "number" || typeof crop.width !== "number" || typeof crop.height !== "number") {
+    return undefined;
+  }
+  if (crop.width < 1 || crop.height < 1) {
+    return undefined;
+  }
+  return { x: crop.x, y: crop.y, width: crop.width, height: crop.height };
+}
+
+function readFrame(source: Record<string, unknown>, target: LogoTarget, legacyWidth: unknown): LogoFrame {
+  const defaults = defaultFrame(target);
+  const widthLimits = frameLimits.areaWidth[target];
+  const widthFallback = typeof legacyWidth === "number" && Number.isFinite(legacyWidth)
+    ? Math.min(widthLimits.max, Math.max(widthLimits.min, Math.round(legacyWidth)))
+    : defaults.areaWidth;
+  const rawFit = source["fit"];
+  const rawAlign = source["align"];
+  const frame: LogoFrame = {
+    areaWidth: readInteger(source, "areaWidth", widthFallback, widthLimits.min, widthLimits.max),
+    areaHeight: readInteger(source, "areaHeight", defaults.areaHeight, frameLimits.areaHeight.min, frameLimits.areaHeight.max),
+    fit: isFitMode(rawFit) ? rawFit : defaults.fit,
+    align: isAlignment(rawAlign) ? rawAlign : defaults.align,
+    zoom: readInteger(source, "zoom", defaults.zoom, frameLimits.zoom.min, frameLimits.zoom.max),
+    offsetX: readInteger(source, "offsetX", defaults.offsetX, frameLimits.offset.min, frameLimits.offset.max),
+    offsetY: readInteger(source, "offsetY", defaults.offsetY, frameLimits.offset.min, frameLimits.offset.max)
+  };
+  const crop = readCrop(source);
+  if (crop !== undefined) {
+    frame.crop = crop;
+  }
+  return frame;
+}
+
+function readSlot(logos: Record<string, unknown>, target: LogoTarget): LogoSlot {
+  const slot = readRecord(logos, target);
+  const legacySourceKey = target === "main" ? "mainSource" : "sideSource";
+  const legacyWidthKey = target === "main" ? "mainWidth" : "sideWidth";
+  const result: LogoSlot = { frame: readFrame(readRecord(slot, "frame"), target, logos[legacyWidthKey]) };
+  const source = readImageSource(slot, "source") ?? readImageSource(logos, legacySourceKey);
+  if (source !== undefined) {
+    result.source = source;
+  }
+  return result;
+}
+
 function readRecord(source: Record<string, unknown>, key: string): Record<string, unknown> {
   const value = source[key];
   return isRecord(value) ? value : {};
@@ -187,8 +264,8 @@ export function parseState(input: unknown, fallbackLanguage: Language): Signatur
       showMain: readBoolean(logos, "showMain", defaults.logos.showMain),
       showSide: readBoolean(logos, "showSide", defaults.logos.showSide),
       layout: rawLayout === "vertical" ? "vertical" : "horizontal",
-      mainWidth: readInteger(logos, "mainWidth", defaults.logos.mainWidth, logoWidthLimits.main.min, logoWidthLimits.main.max),
-      sideWidth: readInteger(logos, "sideWidth", defaults.logos.sideWidth, logoWidthLimits.side.min, logoWidthLimits.side.max)
+      main: readSlot(logos, "main"),
+      side: readSlot(logos, "side")
     },
     colors: {
       text: readColor(colors, "text", defaults.colors.text),
@@ -205,13 +282,5 @@ export function parseState(input: unknown, fallbackLanguage: Language): Signatur
     }
   };
 
-  const mainSource = readImageSource(logos, "mainSource");
-  const sideSource = readImageSource(logos, "sideSource");
-  if (mainSource !== undefined) {
-    state.logos.mainSource = mainSource;
-  }
-  if (sideSource !== undefined) {
-    state.logos.sideSource = sideSource;
-  }
   return state;
 }

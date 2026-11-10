@@ -47,7 +47,7 @@ test("recommends image export when the logo has no public URL", async function (
 });
 
 test("copies rich HTML using the hosted logo URL", async function ({ page }) {
-  await page.locator("#mainLogoInput").setInputFiles(logoFixture);
+  await page.locator("#logoFileInput").setInputFiles(logoFixture);
   await page.locator("#nameInput").fill("Maria Silva");
   await page.locator("#copyHtmlBtn").click();
   const dialog = page.locator("#copyDialog");

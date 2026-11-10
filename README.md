@@ -30,48 +30,50 @@ A browser-based tool to design, preview, and export email signatures with custom
 5. Preview updates in real time
 6. Export as PNG, JPG, SVG, or copy/download the HTML
 
-## How to Serve Locally
+## Development
 
-This is a static single-file application. Serve it with any HTTP server:
-
-### Python 3
+Requirements: Node.js (version in `.nvmrc`) and npm.
 
 ```bash
-python3 -m http.server 8000
+npm install
+npm run dev
 ```
 
-Then open http://localhost:8000
+Then open the URL printed by Vite (usually http://localhost:5173).
 
-### Node.js (via npx)
+### Checks
+
+| Command | What it does |
+|---|---|
+| `npm run typecheck` | Strict TypeScript check |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run build` | Production build into `dist/` |
+| `npm run test:e2e` | End-to-end tests (Playwright) against the built app |
+| `npm run check` | All of the above, in order |
+
+Before the first end-to-end run, install the browser once:
 
 ```bash
-npx serve .
+npx playwright install chromium
 ```
 
-### VS Code
+### Agent skills
 
-Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.liveServer) extension, right-click `index.html`, and select **Open with Live Server**.
-
-### Zed
-
-Open the project folder, then in the integrated terminal run:
+Project skills live in `.agents/skills/` (linked into `.claude/skills/` for Claude Code) and are pinned in `skills-lock.json`. They are committed, so a fresh clone already has them. To restore or reinstall them from the lock file:
 
 ```bash
-npx serve .
+npx skills experimental_install
 ```
 
-Or use Zed's built-in HTTP server via the command palette: `zed: open dev server`.
+### Deployment
 
-### WebStorm / IntelliJ IDEA
+The GitHub Actions workflow (`.github/workflows/deploy.yaml`) runs the full check on every pull request and push. Pushes to `main` publish `dist/` to GitHub Pages.
 
-Right-click `index.html` and select **Open in Browser**, or use the built-in **Live Edit** feature (enabled by default for HTML files).
-
-### GitHub Pages
-
-This project is already set up with a GitHub Actions workflow (`.github/workflows/deploy.yaml`) that deploys to GitHub Pages automatically on every push to `main`.
+Architecture decisions are recorded in `docs/adr/`.
 
 ## Tech Stack
 
-- Vanilla HTML, CSS, and JavaScript (no framework, no build step)
-- [html-to-image](https://github.com/bubkoo/html-to-image) via esm.sh for PNG export
-- Single file — open in a browser and it works
+- TypeScript and plain DOM (no UI framework), built with [Vite](https://vite.dev)
+- [html-to-image](https://github.com/bubkoo/html-to-image) for PNG export
+- [Vitest](https://vitest.dev) and [Playwright](https://playwright.dev) for tests
+- Static output, deployed to GitHub Pages

@@ -4,6 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title data-i18n="title">Gerador de Assinatura de E-mail</title>
+  <script>
+    (function () {
+      var preference = "system";
+      try {
+        preference = localStorage.getItem("email-signature-generator:theme") || "system";
+      } catch (error) {
+        preference = "system";
+      }
+      var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var dark = preference === "dark" || (preference !== "light" && prefersDark);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    })();
+  </script>
   <link rel="stylesheet" href="/src/styles/app.css" />
 </head>
 <body>
@@ -11,27 +24,35 @@
     <aside class="panel">
       <h1 data-i18n="title">Gerador de assinatura</h1>
 
-      <div class="lang-bar">
-        <label data-i18n="languageLabel">Idioma</label>
-        <select id="langSelect">
-          <option value="pt-BR">Português (BR)</option>
-          <option value="en">English</option>
-        </select>
+      <div class="top-bar">
+        <div class="lang-bar">
+          <label for="langSelect" data-i18n="languageLabel">Idioma</label>
+          <select id="langSelect">
+            <option value="pt-BR">Português (BR)</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="theme-switch" role="radiogroup" aria-labelledby="themeLabel">
+          <span id="themeLabel" class="visually-hidden" data-i18n="themeLabel">Tema</span>
+          <label><input type="radio" name="themePreference" value="system" checked> <span data-i18n="themeSystem">Sistema</span></label>
+          <label><input type="radio" name="themePreference" value="light"> <span data-i18n="themeLight">Claro</span></label>
+          <label><input type="radio" name="themePreference" value="dark"> <span data-i18n="themeDark">Escuro</span></label>
+        </div>
       </div>
 
       <div class="group">
         <h3 data-i18n="dataGroup">Dados</h3>
         <div class="field">
           <label data-i18n="nameLabel">Nome</label>
-          <input id="nameInput" type="text" value="Nome Sobrenome" data-i18n-placeholder="namePlaceholder" data-i18n-value="nameValue">
+          <input id="nameInput" type="text" data-i18n-placeholder="namePlaceholder">
         </div>
         <div class="field">
           <label data-i18n="roleLabel">Cargo</label>
-          <input id="roleInput" type="text" value="Cargo ou área" data-i18n-placeholder="rolePlaceholder" data-i18n-value="roleValue">
+          <input id="roleInput" type="text" data-i18n-placeholder="rolePlaceholder">
         </div>
         <div class="field">
           <label data-i18n="phoneLabel">Telefone</label>
-          <input id="phoneInput" type="tel" value="+55 (00) 0000-0000" data-i18n-placeholder="phonePlaceholder" data-i18n-value="phoneValue">
+          <input id="phoneInput" type="tel" data-i18n-placeholder="phonePlaceholder">
         </div>
         <label class="checkline"><input type="checkbox" id="showCountryCode" checked> <span data-i18n="showCountryCode">Mostrar código do país</span></label>
       </div>
@@ -40,15 +61,7 @@
         <h3 data-i18n="fontGroup">Fonte</h3>
         <div class="field">
           <label data-i18n="fontFamilyLabel">Família da fonte</label>
-          <select id="fontFamilyInput">
-            <option value="Arial,Helvetica,sans-serif">Arial</option>
-            <option value="'Trebuchet MS',Arial,sans-serif">Trebuchet MS</option>
-            <option value="'Segoe UI',Tahoma,Arial,sans-serif">Segoe UI</option>
-            <option value="Verdana,Geneva,sans-serif">Verdana</option>
-            <option value="'Tahoma',Arial,sans-serif">Tahoma</option>
-            <option value="'Georgia',serif">Georgia</option>
-            <option value="'Times New Roman',Times,serif">Times New Roman</option>
-          </select>
+          <select id="fontFamilyInput"></select>
         </div>
       </div>
 
@@ -168,6 +181,7 @@
           <button id="copyHtmlBtn" class="secondary" data-i18n="copyHtml">Copiar HTML</button>
           <button id="resetBtn" class="ghost" data-i18n="reset">Resetar</button>
         </div>
+        <p class="hint" data-i18n="autosaveHint">Salvo automaticamente</p>
 
         <div id="exportStatus" role="status" aria-live="polite"></div>
         <p class="hint" data-i18n="hintText">

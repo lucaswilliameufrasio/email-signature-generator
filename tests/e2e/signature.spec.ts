@@ -118,6 +118,10 @@ test("resets every field to its default", async function ({ page }) {
   await page.locator("#nameInput").fill("Maria Silva");
   await page.locator("#paletteGrid .palette").nth(2).click();
   await page.locator("#showSideLogo").check();
+  page.once("dialog", async function (dialog) {
+    expect(dialog.message()).toContain("Resetar apaga a assinatura salva");
+    await dialog.accept();
+  });
   await page.locator("#resetBtn").click();
 
   await expect(page.locator("#nameEl")).toHaveText("Nome Sobrenome");

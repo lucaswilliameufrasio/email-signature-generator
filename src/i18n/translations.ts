@@ -103,7 +103,15 @@ const portugueseTexts = {
   imageInsertOutlookWeb: "No Outlook na web: Configurações > Contas > Assinaturas. No editor, use o botão de inserir imagem e escolha o arquivo baixado.",
   imageInsertOutlookDesktop: "No Outlook para Windows/Mac: abra as configurações de assinatura e use o botão de inserir imagem para escolher o arquivo baixado.",
   imageInsertAppleMail: "No Apple Mail: Ajustes > Assinaturas > +, e arraste o arquivo baixado para o campo da assinatura.",
-  imageInsertOther: "Abra as configurações de assinatura do seu e-mail e insira o arquivo baixado com a opção de imagem do editor."
+  imageInsertOther: "Abra as configurações de assinatura do seu e-mail e insira o arquivo baixado com a opção de imagem do editor.",
+  themeLabel: "Tema",
+  themeSystem: "Sistema",
+  themeLight: "Claro",
+  themeDark: "Escuro",
+  autosaveHint: "Suas alterações ficam salvas automaticamente neste navegador.",
+  resetConfirm: "Resetar apaga a assinatura salva neste navegador. Deseja continuar?",
+  statusLogosNotSaved: "As logos são grandes demais para salvar no navegador. O restante foi salvo, mas as logos serão perdidas ao recarregar a página.",
+  statusStorageUnavailable: "Não foi possível salvar neste navegador. As alterações serão perdidas ao recarregar a página."
 };
 
 export type TranslationKey = keyof typeof portugueseTexts;
@@ -211,7 +219,15 @@ const englishTexts: TranslationTable = {
   imageInsertOutlookWeb: "In Outlook on the web: Settings > Accounts > Signatures. In the editor, use the insert image button and choose the downloaded file.",
   imageInsertOutlookDesktop: "In Outlook for Windows/Mac: open the signature settings and use the insert image button to choose the downloaded file.",
   imageInsertAppleMail: "In Apple Mail: Settings > Signatures > +, then drag the downloaded file into the signature field.",
-  imageInsertOther: "Open your email signature settings and insert the downloaded file with the editor's image option."
+  imageInsertOther: "Open your email signature settings and insert the downloaded file with the editor's image option.",
+  themeLabel: "Theme",
+  themeSystem: "System",
+  themeLight: "Light",
+  themeDark: "Dark",
+  autosaveHint: "Your changes are saved automatically in this browser.",
+  resetConfirm: "Reset deletes the signature saved in this browser. Continue?",
+  statusLogosNotSaved: "The logos are too large to save in the browser. Everything else was saved, but the logos will be lost when the page reloads.",
+  statusStorageUnavailable: "Could not save in this browser. Changes will be lost when the page reloads."
 };
 
 export const translations: Record<Language, TranslationTable> = {

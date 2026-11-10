@@ -1,244 +1,128 @@
-import { requireElement } from "./dom";
-import { detectLanguage, isLanguage } from "./i18n/language";
-import { fillTemplate, isTranslationKey, translations, type Language, type TranslationTable } from "./i18n/translations";
-import { defaultMainLogo, defaultSideLogo } from "./signature/default-logos";
-import { palettes } from "./signature/palettes";
-import { formatPhoneLine } from "./signature/phone";
+import { getElements } from "./app/elements";
+import { renderSignature } from "./app/render-signature";
+import { syncControls } from "./app/sync-controls";
 import { copyRichHtml } from "./export/clipboard";
 import { downloadBlob } from "./export/download";
 import { prepareEmailHtml, type LogoSources } from "./export/email-html";
 import { buildHtmlDocument } from "./export/html-document";
 import { exportImage } from "./export/image-export";
 import { describeFormat, formatFileSize, isImageFormat, type ImageFormat } from "./export/image-format";
+import { applyStaticTexts } from "./i18n/apply-texts";
+import { detectLanguage, isLanguage } from "./i18n/language";
+import { fillTemplate, translations, type TranslationTable } from "./i18n/translations";
 import { createCopyJourney } from "./journey/copy-journey";
-
-const langSelect = requireElement("langSelect", HTMLSelectElement);
-const nameInput = requireElement("nameInput", HTMLInputElement);
-const roleInput = requireElement("roleInput", HTMLInputElement);
-const phoneInput = requireElement("phoneInput", HTMLInputElement);
-const fontFamilyInput = requireElement("fontFamilyInput", HTMLSelectElement);
-const dirtyFields = new Set<string>();
-const showCountryCodeCheckbox = requireElement("showCountryCode", HTMLInputElement);
-
-const showMainLogoCheckbox = requireElement("showMainLogo", HTMLInputElement);
-const showSideLogoCheckbox = requireElement("showSideLogo", HTMLInputElement);
-const logoLayoutInput = requireElement("logoLayoutInput", HTMLSelectElement);
-const mainLogoWidthInput = requireElement("mainLogoWidthInput", HTMLInputElement);
-const sideLogoWidthInput = requireElement("sideLogoWidthInput", HTMLInputElement);
-const mainSizeLabel = requireElement("mainSizeLabel", HTMLSpanElement);
-const sideSizeLabel = requireElement("sideSizeLabel", HTMLSpanElement);
-
-const mainLogoInput = requireElement("mainLogoInput", HTMLInputElement);
-const sideLogoInput = requireElement("sideLogoInput", HTMLInputElement);
-const mainDrop = requireElement("mainDrop", HTMLDivElement);
-const sideDrop = requireElement("sideDrop", HTMLDivElement);
-
-const textColorInput = requireElement("textColorInput", HTMLInputElement);
-const dividerColorInput = requireElement("dividerColorInput", HTMLInputElement);
-const accentColorInput = requireElement("accentColorInput", HTMLInputElement);
-const bgColorInput = requireElement("bgColorInput", HTMLInputElement);
-const paletteGrid = requireElement("paletteGrid", HTMLDivElement);
-
-const exportFormatInput = requireElement("exportFormatInput", HTMLSelectElement);
-const exportScaleInput = requireElement("exportScaleInput", HTMLSelectElement);
-const exportQualityInput = requireElement("exportQualityInput", HTMLInputElement);
-const qualityField = requireElement("qualityField", HTMLDivElement);
-const qualityValueLabel = requireElement("qualityValueLabel", HTMLSpanElement);
-const webpWarning = requireElement("webpWarning", HTMLParagraphElement);
-const downloadImageBtn = requireElement("downloadImageBtn", HTMLButtonElement);
-const downloadHtmlBtn = requireElement("downloadHtmlBtn", HTMLButtonElement);
-const copyHtmlBtn = requireElement("copyHtmlBtn", HTMLButtonElement);
-const resetBtn = requireElement("resetBtn", HTMLButtonElement);
-const exportStatus = requireElement("exportStatus", HTMLDivElement);
-
-const sigTable = requireElement("sigTable", HTMLTableElement);
-const logosCell = requireElement("logosCell", HTMLTableCellElement);
-const dividerCell = requireElement("dividerCell", HTMLTableCellElement);
-const dividerBar = requireElement("dividerBar", HTMLDivElement);
-const nameEl = requireElement("nameEl", HTMLDivElement);
-const roleEl = requireElement("roleEl", HTMLDivElement);
-const phoneEl = requireElement("phoneEl", HTMLDivElement);
-
-const logosHorizontal = requireElement("logosHorizontal", HTMLTableElement);
-const logosVertical = requireElement("logosVertical", HTMLTableElement);
-
-const mainLogo = requireElement("mainLogo", HTMLImageElement);
-const sideLogo = requireElement("sideLogo", HTMLImageElement);
-const mainLogoClone = requireElement("mainLogoClone", HTMLImageElement);
-const sideLogoClone = requireElement("sideLogoClone", HTMLImageElement);
-
-const mainLogoWrapH = requireElement("mainLogoWrapH", HTMLTableCellElement);
-const sideLogoWrapH = requireElement("sideLogoWrapH", HTMLTableCellElement);
-const mainLogoWrapV = requireElement("mainLogoWrapV", HTMLTableCellElement);
-const sideLogoWrapV = requireElement("sideLogoWrapV", HTMLTableCellElement);
+import { fontOptions } from "./signature/fonts";
+import { palettes } from "./signature/palettes";
+import {
+  changeLanguage,
+  createDefaultState,
+  editText,
+  exportScales,
+  logoWidthLimits,
+  qualityLimits,
+  type SignatureState,
+  type TextField
+} from "./state/signature-state";
+import { browserStorage, clearState, loadState, saveState, type SaveResult } from "./state/storage";
+import { isThemePreference, loadThemePreference, resolveTheme, saveThemePreference, type ThemePreference } from "./theme/theme";
 
 type LogoTarget = "main" | "side";
 
-function currentLanguage(): Language {
-  const selectedLanguage = langSelect.value;
-  if (isLanguage(selectedLanguage)) {
-    return selectedLanguage;
-  }
-  return "pt-BR";
-}
+const elements = getElements();
+const storage = browserStorage();
+const saveDelayMs = 300;
 
-function currentTexts(): TranslationTable {
-  return translations[currentLanguage()];
+let state: SignatureState = loadState(storage, detectLanguage(navigator.language));
+let pendingSave: ReturnType<typeof setTimeout> | undefined;
+let lastSaveResult: SaveResult = "saved";
+let renderedLanguage = "";
+
+function texts(): TranslationTable {
+  return translations[state.language];
 }
 
 function setStatus(statusText: string): void {
-  exportStatus.textContent = statusText;
+  elements.exportStatus.textContent = statusText;
 }
 
-function translatedValue(element: Element, attributeName: string): string | undefined {
-  const key = element.getAttribute(attributeName);
-  if (!key || !isTranslationKey(key)) {
-    return undefined;
+function flushSave(): void {
+  if (pendingSave !== undefined) {
+    clearTimeout(pendingSave);
+    pendingSave = undefined;
   }
-  return currentTexts()[key];
+  const result = saveState(storage, state);
+  if (result !== lastSaveResult) {
+    if (result === "savedWithoutLogos") {
+      setStatus(texts().statusLogosNotSaved);
+    } else if (result === "failed") {
+      setStatus(texts().statusStorageUnavailable);
+    }
+  }
+  lastSaveResult = result;
 }
 
-function applyLanguage(): void {
-  document.documentElement.lang = currentLanguage();
-
-  for (const element of document.querySelectorAll("[data-i18n]")) {
-    const text = translatedValue(element, "data-i18n");
-    if (text !== undefined) {
-      element.textContent = text;
-    }
+function scheduleSave(): void {
+  if (pendingSave !== undefined) {
+    clearTimeout(pendingSave);
   }
-
-  for (const element of document.querySelectorAll("[data-i18n-placeholder]")) {
-    const text = translatedValue(element, "data-i18n-placeholder");
-    if (text !== undefined && element instanceof HTMLInputElement) {
-      element.placeholder = text;
-    }
-  }
-
-  for (const element of document.querySelectorAll("[data-i18n-opt]")) {
-    const text = translatedValue(element, "data-i18n-opt");
-    if (text !== undefined) {
-      element.textContent = text;
-    }
-  }
-
-  for (const element of document.querySelectorAll("[data-i18n-alt]")) {
-    const text = translatedValue(element, "data-i18n-alt");
-    if (text !== undefined && element instanceof HTMLImageElement) {
-      element.alt = text;
-    }
-  }
-
-  for (const element of document.querySelectorAll("[data-i18n-value]")) {
-    if (dirtyFields.has(element.id)) {
-      continue;
-    }
-    const text = translatedValue(element, "data-i18n-value");
-    if (text !== undefined && element instanceof HTMLInputElement) {
-      element.value = text;
-    }
-  }
-
-  applyText();
-  buildPalettes();
+  pendingSave = setTimeout(flushSave, saveDelayMs);
 }
 
 function buildPalettes(): void {
-  paletteGrid.innerHTML = "";
+  elements.paletteGrid.replaceChildren();
   for (const palette of palettes) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "palette";
-    const paletteName = currentTexts()[palette.name];
-    button.innerHTML = `
-          <div class="swatches">
-            <span class="sw" style="background:${palette.text}"></span>
-            <span class="sw" style="background:${palette.divider}"></span>
-            <span class="sw" style="background:${palette.accent}"></span>
-            <span class="sw" style="background:${palette.bg}"></span>
-          </div>
-          ${paletteName}
-        `;
+    const swatches = document.createElement("div");
+    swatches.className = "swatches";
+    for (const color of [palette.text, palette.divider, palette.accent, palette.bg]) {
+      const swatch = document.createElement("span");
+      swatch.className = "sw";
+      swatch.style.background = color;
+      swatches.append(swatch);
+    }
+    button.append(swatches, texts()[palette.name]);
     button.addEventListener("click", function () {
-      textColorInput.value = palette.text;
-      dividerColorInput.value = palette.divider;
-      accentColorInput.value = palette.accent;
-      bgColorInput.value = palette.bg;
-      applyColors();
+      update({
+        ...state,
+        colors: { text: palette.text, divider: palette.divider, accent: palette.accent, background: palette.bg }
+      });
     });
-    paletteGrid.appendChild(button);
+    elements.paletteGrid.append(button);
   }
 }
 
-function syncLogoSources(): void {
-  mainLogoClone.src = mainLogo.src;
-  sideLogoClone.src = sideLogo.src;
-}
-
-function setLine(element: HTMLElement, text: string): void {
-  element.textContent = text;
-  element.style.display = text.trim() === "" ? "none" : "";
-}
-
-function applyText(): void {
-  setLine(nameEl, nameInput.value);
-  setLine(roleEl, roleInput.value);
-  setLine(phoneEl, formatPhoneLine(phoneInput.value, showCountryCodeCheckbox.checked, currentTexts().phonePrefix));
-}
-
-function applyFont(): void {
-  const fontFamily = fontFamilyInput.value;
-  sigTable.style.fontFamily = fontFamily;
-  nameEl.style.fontFamily = fontFamily;
-  roleEl.style.fontFamily = fontFamily;
-  phoneEl.style.fontFamily = fontFamily;
-}
-
-function applyColors(): void {
-  sigTable.style.background = bgColorInput.value;
-  nameEl.style.color = textColorInput.value;
-  roleEl.style.color = accentColorInput.value;
-  phoneEl.style.color = textColorInput.value;
-  dividerBar.style.background = dividerColorInput.value;
-}
-
-function applyLogoSizes(): void {
-  const mainWidth = parseInt(mainLogoWidthInput.value, 10);
-  const sideWidth = parseInt(sideLogoWidthInput.value, 10);
-
-  mainSizeLabel.textContent = `${mainWidth}px`;
-  sideSizeLabel.textContent = `${sideWidth}px`;
-
-  for (const image of [mainLogo, mainLogoClone]) {
-    image.style.width = `${mainWidth}px`;
-    image.style.height = "auto";
-  }
-
-  for (const image of [sideLogo, sideLogoClone]) {
-    image.style.width = `${sideWidth}px`;
-    image.style.height = "auto";
+function buildFontOptions(): void {
+  elements.fontFamilyInput.replaceChildren();
+  for (const font of fontOptions) {
+    elements.fontFamilyInput.append(new Option(font.label, font.value));
   }
 }
 
-function applyLogosVisibilityAndLayout(): void {
-  const hasMain = showMainLogoCheckbox.checked;
-  const hasSide = showSideLogoCheckbox.checked;
-  const hasAny = hasMain || hasSide;
-  const vertical = logoLayoutInput.value === "vertical";
+function render(): void {
+  if (renderedLanguage !== state.language) {
+    document.documentElement.lang = state.language;
+    applyStaticTexts(document, texts());
+    buildPalettes();
+    renderedLanguage = state.language;
+  }
+  syncControls(state, elements);
+  renderSignature(state, elements, texts());
+}
 
-  logosCell.style.display = hasAny ? "" : "none";
-  dividerCell.style.display = hasAny ? "" : "none";
+function update(nextState: SignatureState): void {
+  state = nextState;
+  render();
+  scheduleSave();
+}
 
-  logosHorizontal.style.display = vertical ? "none" : "";
-  logosVertical.style.display = vertical ? "" : "none";
-
-  mainLogoWrapH.style.display = hasMain ? "" : "none";
-  sideLogoWrapH.style.display = hasSide ? "" : "none";
-  mainLogoWrapV.style.display = hasMain ? "" : "none";
-  sideLogoWrapV.style.display = hasSide ? "" : "none";
-
-  mainLogoWrapH.style.paddingRight = hasMain && hasSide ? "12px" : "0";
-  mainLogoWrapV.style.paddingBottom = hasMain && hasSide ? "8px" : "0";
+function clampNumber(rawValue: string, minimum: number, maximum: number, fallback: number): number {
+  const parsed = parseInt(rawValue, 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(maximum, Math.max(minimum, parsed));
 }
 
 function readAsDataUrl(file: File): Promise<string> {
@@ -251,30 +135,25 @@ function readAsDataUrl(file: File): Promise<string> {
       }
       reject(new Error("Unexpected file reader result"));
     };
-    reader.onerror = reject;
+    reader.onerror = function () {
+      reject(reader.error ?? new Error("Could not read file"));
+    };
     reader.readAsDataURL(file);
   });
 }
 
-async function setLogoFromFile(file: File, targetType: LogoTarget): Promise<void> {
+async function setLogoFromFile(file: File, target: LogoTarget): Promise<void> {
   if (!file.type.startsWith("image/")) {
     return;
   }
-  const data = await readAsDataUrl(file);
-
-  if (targetType === "main") {
-    mainLogo.src = data;
-  } else {
-    sideLogo.src = data;
-  }
-
-  syncLogoSources();
-  applyLogoSizes();
-  applyLogosVisibilityAndLayout();
-  setStatus(currentTexts().statusLogoLoaded);
+  const source = await readAsDataUrl(file);
+  const logos = target === "main" ? { ...state.logos, mainSource: source } : { ...state.logos, sideSource: source };
+  update({ ...state, logos });
+  setStatus(texts().statusLogoLoaded);
+  flushSave();
 }
 
-function wireDropzone(zone: HTMLElement, input: HTMLInputElement, targetType: LogoTarget): void {
+function wireDropzone(zone: HTMLElement, input: HTMLInputElement, target: LogoTarget): void {
   for (const eventType of ["dragenter", "dragover"]) {
     zone.addEventListener(eventType, function (event) {
       event.preventDefault();
@@ -282,7 +161,6 @@ function wireDropzone(zone: HTMLElement, input: HTMLInputElement, targetType: Lo
       zone.classList.add("dragover");
     });
   }
-
   for (const eventType of ["dragleave", "drop"]) {
     zone.addEventListener(eventType, function (event) {
       event.preventDefault();
@@ -290,187 +168,192 @@ function wireDropzone(zone: HTMLElement, input: HTMLInputElement, targetType: Lo
       zone.classList.remove("dragover");
     });
   }
-
   zone.addEventListener("drop", async function (event) {
     const file = event.dataTransfer?.files[0];
     if (file) {
-      await setLogoFromFile(file, targetType);
+      await setLogoFromFile(file, target);
     }
   });
-
   input.addEventListener("change", async function () {
     const file = input.files?.[0];
     if (file) {
-      await setLogoFromFile(file, targetType);
+      await setLogoFromFile(file, target);
     }
   });
 }
 
-function inlineForExport(root: HTMLElement): void {
-  root.style.fontFamily = fontFamilyInput.value;
-  root.style.background = bgColorInput.value;
-  root.style.minWidth = "0";
-
-  const textColors: Record<string, string> = {
-    nameEl: textColorInput.value,
-    roleEl: accentColorInput.value,
-    phoneEl: textColorInput.value
-  };
-  for (const [elementId, color] of Object.entries(textColors)) {
-    const textElement = root.querySelector<HTMLElement>(`#${elementId}`);
-    if (textElement) {
-      textElement.style.color = color;
-      textElement.style.fontFamily = fontFamilyInput.value;
-    }
-  }
-
-  const dividerElement = root.querySelector<HTMLElement>("#dividerBar");
-  if (dividerElement) {
-    dividerElement.style.background = dividerColorInput.value;
-  }
-}
-
 function exportableClone(): HTMLElement {
-  const clone = sigTable.cloneNode(true);
+  const clone = elements.sigTable.cloneNode(true);
   if (!(clone instanceof HTMLElement)) {
     throw new Error("Signature clone is not an element");
   }
-  inlineForExport(clone);
+  clone.style.minWidth = "0";
   return clone;
 }
 
 function visibleLogos(): { main: boolean; side: boolean } {
-  return { main: showMainLogoCheckbox.checked, side: showSideLogoCheckbox.checked };
+  return { main: state.logos.showMain, side: state.logos.showSide };
 }
 
 function plainTextSignature(): string {
-  const lines = [nameEl, roleEl, phoneEl]
+  return [elements.nameEl, elements.roleEl, elements.phoneEl]
     .filter(function (element) {
       return element.style.display !== "none";
     })
     .map(function (element) {
       return element.textContent;
-    });
-  return lines.join("\n");
+    })
+    .join("\n");
 }
 
 async function copySignature(logoSources: LogoSources): Promise<void> {
   const htmlContent = prepareEmailHtml(exportableClone(), logoSources);
   await copyRichHtml(htmlContent, plainTextSignature());
-  setStatus(currentTexts().statusCopied);
-}
-
-function selectedFormat(): ImageFormat {
-  const format = exportFormatInput.value;
-  if (isImageFormat(format)) {
-    return format;
-  }
-  return "png";
-}
-
-function selectedScale(): number {
-  const scale = parseInt(exportScaleInput.value, 10);
-  return Number.isFinite(scale) && scale > 0 ? scale : 2;
-}
-
-function selectedQuality(): number {
-  return parseInt(exportQualityInput.value, 10) / 100;
-}
-
-function applyExportControls(): void {
-  const details = describeFormat(selectedFormat());
-  qualityField.hidden = !details.usesQuality;
-  qualityValueLabel.textContent = `${exportQualityInput.value}%`;
-  exportScaleInput.disabled = !details.usesScale;
-  webpWarning.hidden = selectedFormat() !== "webp";
+  setStatus(texts().statusCopied);
 }
 
 async function downloadImageAs(format: ImageFormat): Promise<void> {
-  const texts = currentTexts();
+  const currentTexts = texts();
   const details = describeFormat(format);
-  const scale = details.usesScale ? selectedScale() : 1;
+  const scale = details.usesScale ? state.exportSettings.scale : 1;
   try {
     const imageBlob = await exportImage({
-      node: sigTable,
+      node: elements.sigTable,
       format,
       scale,
-      quality: selectedQuality(),
-      backgroundColor: bgColorInput.value
+      quality: state.exportSettings.quality / 100,
+      backgroundColor: state.colors.background
     });
-    downloadBlob(imageBlob, `${texts.fileBaseName}.${details.extension}`);
-    setStatus(fillTemplate(texts.statusImageDownloadedDetail, {
+    downloadBlob(imageBlob, `${currentTexts.fileBaseName}.${details.extension}`);
+    setStatus(fillTemplate(currentTexts.statusImageDownloadedDetail, {
       format: details.label,
       scale: String(scale),
       size: formatFileSize(imageBlob.size)
     }));
   } catch (error) {
     console.error(error);
-    setStatus(texts.statusImageFailed);
+    setStatus(currentTexts.statusImageFailed);
   }
 }
 
 function downloadHtml(): void {
-  const texts = currentTexts();
+  const currentTexts = texts();
   const signatureHtml = prepareEmailHtml(exportableClone(), {});
-  const htmlContent = buildHtmlDocument(signatureHtml, currentLanguage(), texts.htmlTitle);
-  downloadBlob(new Blob([htmlContent], { type: "text/html;charset=utf-8" }), `${texts.fileBaseName}.html`);
-  setStatus(texts.statusHtmlDownloaded);
+  const htmlContent = buildHtmlDocument(signatureHtml, state.language, currentTexts.htmlTitle);
+  downloadBlob(new Blob([htmlContent], { type: "text/html;charset=utf-8" }), `${currentTexts.fileBaseName}.html`);
+  setStatus(currentTexts.statusHtmlDownloaded);
 }
 
 function resetAll(): void {
-  dirtyFields.clear();
-  nameInput.value = "Nome Sobrenome";
-  roleInput.value = "Cargo ou área";
-  phoneInput.value = "+55 (00) 0000-0000";
-  fontFamilyInput.value = "Arial,Helvetica,sans-serif";
-
-  showMainLogoCheckbox.checked = true;
-  showSideLogoCheckbox.checked = false;
-  showCountryCodeCheckbox.checked = true;
-  logoLayoutInput.value = "horizontal";
-  mainLogoWidthInput.value = "260";
-  sideLogoWidthInput.value = "120";
-
-  textColorInput.value = "#1f3b73";
-  dividerColorInput.value = "#1f3b73";
-  accentColorInput.value = "#37b37e";
-  bgColorInput.value = "#f3f4f6";
-
-  mainLogo.src = defaultMainLogo;
-  sideLogo.src = defaultSideLogo;
-  syncLogoSources();
-
-  mainLogoInput.value = "";
-  sideLogoInput.value = "";
-
-  applyText();
-  applyFont();
-  applyColors();
-  applyLogoSizes();
-  applyLogosVisibilityAndLayout();
+  if (!window.confirm(texts().resetConfirm)) {
+    return;
+  }
+  clearState(storage);
+  elements.mainLogoInput.value = "";
+  elements.sideLogoInput.value = "";
+  state = createDefaultState(state.language);
+  lastSaveResult = "saved";
+  render();
   setStatus("");
 }
 
-for (const element of [nameInput, roleInput, phoneInput]) {
-  element.addEventListener("input", function () {
-    dirtyFields.add(element.id);
-    applyText();
+const systemDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+let themePreference: ThemePreference = loadThemePreference(storage);
+
+function applyTheme(): void {
+  document.documentElement.dataset["theme"] = resolveTheme(themePreference, systemDarkQuery.matches);
+  for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="themePreference"]')) {
+    radio.checked = radio.value === themePreference;
+  }
+}
+
+function wireTextField(input: HTMLInputElement, field: TextField): void {
+  input.addEventListener("input", function () {
+    update(editText(state, field, input.value));
   });
 }
-fontFamilyInput.addEventListener("change", applyFont);
-for (const element of [textColorInput, dividerColorInput, accentColorInput, bgColorInput]) {
-  element.addEventListener("input", applyColors);
+
+wireTextField(elements.nameInput, "name");
+wireTextField(elements.roleInput, "role");
+wireTextField(elements.phoneInput, "phone");
+
+elements.langSelect.addEventListener("change", function () {
+  const language = elements.langSelect.value;
+  if (isLanguage(language)) {
+    update(changeLanguage(state, language));
+  }
+});
+
+elements.showCountryCodeCheckbox.addEventListener("change", function () {
+  update({ ...state, showCountryCode: elements.showCountryCodeCheckbox.checked });
+});
+
+elements.fontFamilyInput.addEventListener("change", function () {
+  update({ ...state, fontFamily: elements.fontFamilyInput.value });
+});
+
+elements.showMainLogoCheckbox.addEventListener("change", function () {
+  update({ ...state, logos: { ...state.logos, showMain: elements.showMainLogoCheckbox.checked } });
+});
+
+elements.showSideLogoCheckbox.addEventListener("change", function () {
+  update({ ...state, logos: { ...state.logos, showSide: elements.showSideLogoCheckbox.checked } });
+});
+
+elements.logoLayoutInput.addEventListener("change", function () {
+  const layout = elements.logoLayoutInput.value === "vertical" ? "vertical" : "horizontal";
+  update({ ...state, logos: { ...state.logos, layout } });
+});
+
+elements.mainLogoWidthInput.addEventListener("input", function () {
+  const limits = logoWidthLimits.main;
+  const mainWidth = clampNumber(elements.mainLogoWidthInput.value, limits.min, limits.max, state.logos.mainWidth);
+  update({ ...state, logos: { ...state.logos, mainWidth } });
+});
+
+elements.sideLogoWidthInput.addEventListener("input", function () {
+  const limits = logoWidthLimits.side;
+  const sideWidth = clampNumber(elements.sideLogoWidthInput.value, limits.min, limits.max, state.logos.sideWidth);
+  update({ ...state, logos: { ...state.logos, sideWidth } });
+});
+
+const colorInputs = [
+  { input: elements.textColorInput, key: "text" },
+  { input: elements.dividerColorInput, key: "divider" },
+  { input: elements.accentColorInput, key: "accent" },
+  { input: elements.bgColorInput, key: "background" }
+] as const;
+
+for (const colorInput of colorInputs) {
+  colorInput.input.addEventListener("input", function () {
+    update({ ...state, colors: { ...state.colors, [colorInput.key]: colorInput.input.value } });
+  });
 }
-for (const element of [showMainLogoCheckbox, showSideLogoCheckbox]) {
-  element.addEventListener("change", applyLogosVisibilityAndLayout);
-}
-showCountryCodeCheckbox.addEventListener("change", applyText);
-logoLayoutInput.addEventListener("change", applyLogosVisibilityAndLayout);
-mainLogoWidthInput.addEventListener("input", applyLogoSizes);
-sideLogoWidthInput.addEventListener("input", applyLogoSizes);
+
+elements.exportFormatInput.addEventListener("change", function () {
+  const format = elements.exportFormatInput.value;
+  if (isImageFormat(format)) {
+    update({ ...state, exportSettings: { ...state.exportSettings, format } });
+  }
+});
+
+elements.exportScaleInput.addEventListener("change", function () {
+  const scale = parseInt(elements.exportScaleInput.value, 10);
+  const knownScale = exportScales.find(function (option) {
+    return option === scale;
+  });
+  if (knownScale !== undefined) {
+    update({ ...state, exportSettings: { ...state.exportSettings, scale: knownScale } });
+  }
+});
+
+elements.exportQualityInput.addEventListener("input", function () {
+  const quality = clampNumber(elements.exportQualityInput.value, qualityLimits.min, qualityLimits.max, state.exportSettings.quality);
+  update({ ...state, exportSettings: { ...state.exportSettings, quality } });
+});
 
 const copyJourney = createCopyJourney({
-  texts: currentTexts,
+  texts,
   visibleLogos,
   copySignature,
   downloadPng: async function () {
@@ -478,25 +361,35 @@ const copyJourney = createCopyJourney({
   }
 });
 
-copyHtmlBtn.addEventListener("click", function () {
+elements.copyHtmlBtn.addEventListener("click", function () {
   copyJourney.open();
 });
-
-downloadHtmlBtn.addEventListener("click", downloadHtml);
-downloadImageBtn.addEventListener("click", async function () {
-  await downloadImageAs(selectedFormat());
+elements.downloadHtmlBtn.addEventListener("click", downloadHtml);
+elements.downloadImageBtn.addEventListener("click", async function () {
+  await downloadImageAs(state.exportSettings.format);
 });
-exportFormatInput.addEventListener("change", applyExportControls);
-exportQualityInput.addEventListener("input", applyExportControls);
-resetBtn.addEventListener("click", resetAll);
+elements.resetBtn.addEventListener("click", resetAll);
 
-langSelect.addEventListener("change", applyLanguage);
+wireDropzone(elements.mainDrop, elements.mainLogoInput, "main");
+wireDropzone(elements.sideDrop, elements.sideLogoInput, "side");
 
-wireDropzone(mainDrop, mainLogoInput, "main");
-wireDropzone(sideDrop, sideLogoInput, "side");
+for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="themePreference"]')) {
+  radio.addEventListener("change", function () {
+    if (radio.checked && isThemePreference(radio.value)) {
+      themePreference = radio.value;
+      saveThemePreference(storage, themePreference);
+      applyTheme();
+    }
+  });
+}
+systemDarkQuery.addEventListener("change", applyTheme);
 
-langSelect.value = detectLanguage(navigator.language);
-buildPalettes();
-resetAll();
-applyLanguage();
-applyExportControls();
+window.addEventListener("pagehide", function () {
+  if (pendingSave !== undefined) {
+    flushSave();
+  }
+});
+
+buildFontOptions();
+applyTheme();
+render();

@@ -18,6 +18,8 @@ A browser-based tool to design, preview, and export email signatures with custom
 - Guided "Copy HTML" flow: asks which email client you use and whether your logo is hosted at a public https URL, tests the URL, copies rich HTML and shows paste instructions; without a hosted logo it recommends image export instead
 - Download signature as standalone HTML file
 - Internationalization: English and Portuguese (Brazilian), auto-detected from the browser (falls back to pt-BR)
+- Autosave: the signature, logos and export settings are kept in the browser (localStorage) and restored on reload; reset asks for confirmation and clears them. If logos are too large to store, everything else is still saved and a message explains it
+- Light and dark site theme: follows the system by default, with a System / Light / Dark switch that is remembered. The signature itself keeps its own colors
 
 ## Usage
 

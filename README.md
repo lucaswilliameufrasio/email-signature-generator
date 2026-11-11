@@ -6,7 +6,10 @@ A browser-based tool to design, preview, and export email signatures with custom
 
 ## Features
 
-- Live preview of the signature as you edit
+- Live preview of the signature as you edit, always visible: a sticky column on desktop, pinned at the top on phones
+- Editor organized in tabs (Content, Logos, Text, Layout & colors) with fine-tuning tucked under "Fine-tune"
+- Preview inside an email frame with light or dark email background, plus a size readout that warns above the recommended 600px width
+- Defaults follow email signature guidance (22px name, 13–14px details, about 400px wide)
 - Optional text lines: name, role, phone, email, website, LinkedIn and Instagram; empty lines are hidden
 - Contact lines become links (`tel:`, `mailto:`, `https:`), with optional labels ("Phone:", "Email:"...)
 - Per-line text style: size, weight, own color, italic, uppercase, letter spacing, line height, space above and indent
@@ -76,7 +79,7 @@ npx skills experimental_install
 
 The GitHub Actions workflow (`.github/workflows/deploy.yaml`) runs the full check on every pull request and push. Pushes to `main` publish `dist/` to GitHub Pages.
 
-Architecture decisions are recorded in `docs/adr/`.
+Architecture decisions are recorded in `docs/adr/`. The interface follows `docs/design-system.md` (research, tokens, components and checklist), with before/after captures in `docs/design/`.
 
 ## Tech Stack
 

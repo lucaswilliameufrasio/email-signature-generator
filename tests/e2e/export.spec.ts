@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { reveal } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 type DownloadedFile = {
@@ -26,9 +27,9 @@ test("downloads PNG at the selected scale", async function ({ page }) {
     return element.getBoundingClientRect().width;
   });
 
-  await page.locator("#exportScaleInput").selectOption("1");
+  await (await reveal(page, "#exportScaleInput")).selectOption("1");
   const singleScale = await downloadWith(page, "#downloadImageBtn");
-  await page.locator("#exportScaleInput").selectOption("3");
+  await (await reveal(page, "#exportScaleInput")).selectOption("3");
   const tripleScale = await downloadWith(page, "#downloadImageBtn");
 
   expect(singleScale.filename).toBe("assinatura.png");
@@ -39,7 +40,7 @@ test("downloads PNG at the selected scale", async function ({ page }) {
 });
 
 test("downloads JPG", async function ({ page }) {
-  await page.locator("#exportFormatInput").selectOption("jpeg");
+  await (await reveal(page, "#exportFormatInput")).selectOption("jpeg");
   const file = await downloadWith(page, "#downloadImageBtn");
 
   expect(file.filename).toBe("assinatura.jpg");
@@ -48,7 +49,7 @@ test("downloads JPG", async function ({ page }) {
 
 test("downloads WebP smaller than PNG", async function ({ page }) {
   const pngFile = await downloadWith(page, "#downloadImageBtn");
-  await page.locator("#exportFormatInput").selectOption("webp");
+  await (await reveal(page, "#exportFormatInput")).selectOption("webp");
   const webpFile = await downloadWith(page, "#downloadImageBtn");
 
   expect(webpFile.filename).toBe("assinatura.webp");
@@ -58,7 +59,7 @@ test("downloads WebP smaller than PNG", async function ({ page }) {
 });
 
 test("downloads SVG", async function ({ page }) {
-  await page.locator("#exportFormatInput").selectOption("svg");
+  await (await reveal(page, "#exportFormatInput")).selectOption("svg");
   await expect(page.locator("#exportScaleInput")).toBeDisabled();
   const file = await downloadWith(page, "#downloadImageBtn");
 
@@ -70,30 +71,30 @@ test("shows quality only for lossy formats and warns about WebP", async function
   await expect(page.locator("#qualityField")).toBeHidden();
   await expect(page.locator("#webpWarning")).toBeHidden();
 
-  await page.locator("#exportFormatInput").selectOption("jpeg");
+  await (await reveal(page, "#exportFormatInput")).selectOption("jpeg");
   await expect(page.locator("#qualityField")).toBeVisible();
   await expect(page.locator("#webpWarning")).toBeHidden();
 
-  await page.locator("#exportFormatInput").selectOption("webp");
+  await (await reveal(page, "#exportFormatInput")).selectOption("webp");
   await expect(page.locator("#qualityField")).toBeVisible();
   await expect(page.locator("#webpWarning")).toContainText("Outlook");
 
-  await page.locator("#exportQualityInput").fill("70");
+  await (await reveal(page, "#exportQualityInput")).fill("70");
   await expect(page.locator("#qualityValueLabel")).toHaveText("70%");
 });
 
 test("lower WebP quality produces a smaller file", async function ({ page }) {
-  await page.locator("#exportFormatInput").selectOption("webp");
-  await page.locator("#exportQualityInput").fill("100");
+  await (await reveal(page, "#exportFormatInput")).selectOption("webp");
+  await (await reveal(page, "#exportQualityInput")).fill("100");
   const highQuality = await downloadWith(page, "#downloadImageBtn");
-  await page.locator("#exportQualityInput").fill("50");
+  await (await reveal(page, "#exportQualityInput")).fill("50");
   const lowQuality = await downloadWith(page, "#downloadImageBtn");
 
   expect(lowQuality.content.length).toBeLessThan(highQuality.content.length);
 });
 
 test("exports HTML without hidden elements or editor ids", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
   const file = await downloadWith(page, "#downloadHtmlBtn");
   const htmlContent = file.content.toString("utf-8");
 

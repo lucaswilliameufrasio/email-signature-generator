@@ -5,8 +5,8 @@ test("follows the system color scheme by default", async function ({ page }) {
   await page.goto("/");
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("radio", { name: "Sistema" })).toBeChecked();
-  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(15, 20, 28)");
+  await expect(page.locator(".theme-switch").getByRole("radio", { name: "Sistema" })).toBeChecked();
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(13, 15, 19)");
 
   await page.emulateMedia({ colorScheme: "light" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
@@ -20,7 +20,7 @@ test("an explicit choice overrides the system and persists", async function ({ p
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("radio", { name: "Escuro" })).toBeChecked();
+  await expect(page.locator(".theme-switch").getByRole("radio", { name: "Escuro" })).toBeChecked();
 
   await page.emulateMedia({ colorScheme: "dark" });
   await page.locator(".theme-switch").getByText("Claro").click();

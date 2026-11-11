@@ -1,6 +1,8 @@
 import { getElements } from "./app/elements";
 import { createLogoBaker } from "./app/logo-baker";
+import { createPreviewStage } from "./app/preview-stage";
 import { syncControls } from "./app/sync-controls";
+import { setupTabs } from "./app/tabs";
 import { copyRichHtml } from "./export/clipboard";
 import { downloadBlob } from "./export/download";
 import { prepareEmailHtml, type LogoSources } from "./export/email-html";
@@ -61,6 +63,7 @@ let editingTarget: LogoTarget = "main";
 let editingLine: LineKey = "name";
 
 const logoImages: LogoImages = { main: new Image(), side: new Image() };
+const previewStage = createPreviewStage(elements.stage, elements.previewScale, elements.signaturePreview, elements.signatureSize);
 
 const logoBaker = createLogoBaker(function (target, bakedSource) {
   logoImages[target].src = bakedSource;
@@ -81,8 +84,11 @@ function texts(): TranslationTable {
   return translations[state.language];
 }
 
-function setStatus(statusText: string): void {
+type StatusKind = "success" | "info" | "warning" | "error";
+
+function setStatus(statusText: string, kind: StatusKind = "success"): void {
   elements.exportStatus.textContent = statusText;
+  elements.exportStatus.dataset["kind"] = kind;
 }
 
 function flushSave(): void {
@@ -93,9 +99,9 @@ function flushSave(): void {
   const result = saveState(storage, state);
   if (result !== lastSaveResult) {
     if (result === "savedWithoutLogos") {
-      setStatus(texts().statusLogosNotSaved);
+      setStatus(texts().statusLogosNotSaved, "warning");
     } else if (result === "failed") {
-      setStatus(texts().statusStorageUnavailable);
+      setStatus(texts().statusStorageUnavailable, "error");
     }
   }
   lastSaveResult = result;
@@ -156,6 +162,7 @@ function render(): void {
     logoImages
   });
   elements.signaturePreview.replaceChildren(signature);
+  previewStage.refresh(currentTexts);
   for (const target of ["main", "side"] as const) {
     logoBaker.request(target, logoSource(target), state.logos[target].frame);
   }
@@ -275,7 +282,7 @@ async function openCrop(): Promise<void> {
     update(updateLogo(state, target, { ...state.logos[target], frame: nextFrame }));
   } catch (error) {
     console.error(error);
-    setStatus(texts().statusCropFailed);
+    setStatus(texts().statusCropFailed, "error");
   }
 }
 
@@ -339,12 +346,14 @@ async function downloadImageAs(format: ImageFormat): Promise<void> {
   const scale = details.usesScale ? state.exportSettings.scale : 1;
   try {
     await logoBaker.ready();
-    const imageBlob = await exportImage({
-      node: currentSignature(),
-      format,
-      scale,
-      quality: state.exportSettings.quality / 100,
-      backgroundColor: state.colors.background
+    const imageBlob = await previewStage.withNaturalSize(async function () {
+      return exportImage({
+        node: currentSignature(),
+        format,
+        scale,
+        quality: state.exportSettings.quality / 100,
+        backgroundColor: state.colors.background
+      });
     });
     downloadBlob(imageBlob, `${currentTexts.fileBaseName}.${details.extension}`);
     setStatus(fillTemplate(currentTexts.statusImageDownloadedDetail, {
@@ -354,7 +363,7 @@ async function downloadImageAs(format: ImageFormat): Promise<void> {
     }));
   } catch (error) {
     console.error(error);
-    setStatus(currentTexts.statusImageFailed);
+    setStatus(currentTexts.statusImageFailed, "error");
   }
 }
 
@@ -727,6 +736,18 @@ window.addEventListener("pagehide", function () {
     flushSave();
   }
 });
+
+setupTabs(elements.tablist, function () {
+  previewStage.refresh(texts());
+});
+
+for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="emailBackground"]')) {
+  radio.addEventListener("change", function () {
+    if (radio.checked) {
+      elements.emailFrame.dataset["background"] = radio.value === "dark" ? "dark" : "light";
+    }
+  });
+}
 
 buildFontOptions();
 applyTheme();

@@ -90,7 +90,12 @@ export function getElements() {
     resetBtn: requireElement("resetBtn", HTMLButtonElement),
     exportStatus: requireElement("exportStatus", HTMLDivElement),
 
-    signaturePreview: requireElement("signaturePreview", HTMLElement)
+    signaturePreview: requireElement("signaturePreview", HTMLDivElement),
+    previewScale: requireElement("previewScale", HTMLDivElement),
+    emailFrame: requireElement("emailFrame", HTMLDivElement),
+    signatureSize: requireElement("signatureSize", HTMLParagraphElement),
+    stage: requireElement("signaturePreview", HTMLDivElement).closest("section") ?? document.body,
+    tablist: requireElement("tab-content", HTMLButtonElement).closest<HTMLElement>('[role="tablist"]') ?? document.body
   };
 }
 

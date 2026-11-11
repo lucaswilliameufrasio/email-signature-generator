@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { logosAreStacked } from "./helpers";
+import { logosAreStacked, reveal } from "./helpers";
 
 const logoFixture = path.join(import.meta.dirname, "fixtures", "logo.png");
 
@@ -9,19 +9,19 @@ test.beforeEach(async function ({ page }) {
 });
 
 test("restores the signature after reloading", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
-  await page.locator("#phoneInput").fill("");
-  await page.locator("#showCountryCode").uncheck();
-  await page.locator("#fontFamilyInput").selectOption({ label: "Georgia" });
-  await page.locator("#paletteGrid .palette").nth(2).click();
-  await page.locator("#showSideLogo").check();
-  await page.locator("#logoLayoutInput").selectOption("vertical");
-  await page.locator("#areaWidthInput").fill("300");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  await (await reveal(page, "#phoneInput")).fill("");
+  await (await reveal(page, "#showCountryCode")).uncheck();
+  await (await reveal(page, "#fontFamilyInput")).selectOption({ label: "Georgia" });
+  await (await reveal(page, "#paletteGrid"), page.locator("#paletteGrid .palette").nth(2).click());
+  await (await reveal(page, "#showSideLogo")).check();
+  await (await reveal(page, "#logoLayoutInput")).selectOption("vertical");
+  await (await reveal(page, "#areaWidthInput")).fill("300");
   await page.locator("#logoFileInput").setInputFiles(logoFixture);
-  await page.locator("#zoomInput").fill("80");
-  await page.locator("#exportFormatInput").selectOption("webp");
-  await page.locator("#exportQualityInput").fill("70");
-  await page.locator("#exportScaleInput").selectOption("3");
+  await (await reveal(page, "#zoomInput")).fill("80");
+  await (await reveal(page, "#exportFormatInput")).selectOption("webp");
+  await (await reveal(page, "#exportQualityInput")).fill("70");
+  await (await reveal(page, "#exportScaleInput")).selectOption("3");
 
   await page.reload();
 
@@ -42,8 +42,8 @@ test("restores the signature after reloading", async function ({ page }) {
 });
 
 test("restores the chosen language and keeps untouched fields translated", async function ({ page }) {
-  await page.locator("#roleInput").fill("Engenharia");
-  await page.locator("#langSelect").selectOption("en");
+  await (await reveal(page, "#roleInput")).fill("Engenharia");
+  await (await reveal(page, "#langSelect")).selectOption("en");
   await page.reload();
 
   await expect(page.locator("#langSelect")).toHaveValue("en");
@@ -53,22 +53,22 @@ test("restores the chosen language and keeps untouched fields translated", async
 });
 
 test("reset clears the saved signature", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
   page.once("dialog", async function (dialog) {
     await dialog.accept();
   });
-  await page.locator("#resetBtn").click();
+  await (await reveal(page, "#resetBtn")).click();
   await page.reload();
 
   await expect(page.locator("#nameInput")).toHaveValue("Nome Sobrenome");
 });
 
 test("cancelling reset keeps the signature", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
   page.once("dialog", async function (dialog) {
     await dialog.dismiss();
   });
-  await page.locator("#resetBtn").click();
+  await (await reveal(page, "#resetBtn")).click();
 
   await expect(page.locator("#nameEl")).toHaveText("Maria Silva");
 });
@@ -92,7 +92,7 @@ test("keeps working when the logo is too large to save", async function ({ page 
       originalSetItem.call(this, key, value);
     };
   });
-  await page.locator("#nameInput").fill("Maria Silva");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
   await page.locator("#logoFileInput").setInputFiles(logoFixture);
 
   await expect(page.locator("#exportStatus")).toContainText("grandes demais para salvar");

@@ -89,8 +89,8 @@ export function translatedDefaultText(language: Language, field: TextField): str
 
 export function defaultFrame(target: LogoTarget): LogoFrame {
   return {
-    areaWidth: target === "main" ? 260 : 120,
-    areaHeight: target === "main" ? 79 : 102,
+    areaWidth: target === "main" ? 160 : 90,
+    areaHeight: target === "main" ? 49 : 76,
     fit: "contain",
     align: "center",
     zoom: 100,

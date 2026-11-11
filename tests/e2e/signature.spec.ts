@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { logosAreStacked } from "./helpers";
+import { logosAreStacked, reveal } from "./helpers";
 
 const logoFixture = path.join(import.meta.dirname, "fixtures", "logo.png");
 
@@ -20,9 +20,9 @@ test("renders the default signature in Portuguese", async function ({ page }) {
 });
 
 test("updates the preview while typing", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
-  await page.locator("#roleInput").fill("Engenharia");
-  await page.locator("#phoneInput").fill("+55 (11) 91234-5678");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  await (await reveal(page, "#roleInput")).fill("Engenharia");
+  await (await reveal(page, "#phoneInput")).fill("+55 (11) 91234-5678");
 
   await expect(page.locator("#nameEl")).toHaveText("Maria Silva");
   await expect(page.locator("#roleEl")).toHaveText("Engenharia");
@@ -30,20 +30,20 @@ test("updates the preview while typing", async function ({ page }) {
 });
 
 test("hides the country code when unchecked", async function ({ page }) {
-  await page.locator("#phoneInput").fill("+55 (11) 91234-5678");
-  await page.locator("#showCountryCode").uncheck();
+  await (await reveal(page, "#phoneInput")).fill("+55 (11) 91234-5678");
+  await (await reveal(page, "#showCountryCode")).uncheck();
   await expect(page.locator("#phoneEl")).toHaveText("Telefone: (11) 91234-5678");
 });
 
 test("keeps the area code when the number has no country code", async function ({ page }) {
-  await page.locator("#phoneInput").fill("11 91234-5678");
-  await page.locator("#showCountryCode").uncheck();
+  await (await reveal(page, "#phoneInput")).fill("11 91234-5678");
+  await (await reveal(page, "#showCountryCode")).uncheck();
   await expect(page.locator("#phoneEl")).toHaveText("Telefone: 11 91234-5678");
 });
 
 test("hides empty lines instead of showing labels", async function ({ page }) {
-  await page.locator("#phoneInput").fill("");
-  await page.locator("#roleInput").fill("");
+  await (await reveal(page, "#phoneInput")).fill("");
+  await (await reveal(page, "#roleInput")).fill("");
 
   await expect(page.locator("#phoneEl")).toBeHidden();
   await expect(page.locator("#roleEl")).toBeHidden();
@@ -51,8 +51,8 @@ test("hides empty lines instead of showing labels", async function ({ page }) {
 });
 
 test("switches language keeping edited fields", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
-  await page.locator("#langSelect").selectOption("en");
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  await (await reveal(page, "#langSelect")).selectOption("en");
 
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("h1")).toHaveText("Signature Generator");
@@ -62,7 +62,7 @@ test("switches language keeping edited fields", async function ({ page }) {
 });
 
 test("applies a palette to the signature", async function ({ page }) {
-  await page.locator("#paletteGrid .palette").nth(2).click();
+  await (await reveal(page, "#paletteGrid"), page.locator("#paletteGrid .palette").nth(2).click());
 
   await expect(page.locator("#textColorInput")).toHaveValue("#0f2d75");
   await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(15, 45, 117)");
@@ -71,7 +71,7 @@ test("applies a palette to the signature", async function ({ page }) {
 });
 
 test("paints the role with the accent color and explains where each color is used", async function ({ page }) {
-  await page.locator("#accentColorInput").fill("#ff0000");
+  await (await reveal(page, "#accentColorInput")).fill("#ff0000");
 
   await expect(page.locator("#roleEl")).toHaveCSS("color", "rgb(255, 0, 0)");
   await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(31, 59, 115)");
@@ -80,30 +80,30 @@ test("paints the role with the accent color and explains where each color is use
 });
 
 test("changes the logo layout and visibility", async function ({ page }) {
-  await page.locator("#showSideLogo").check();
+  await (await reveal(page, "#showSideLogo")).check();
   await expect(page.locator("#sideLogo")).toBeVisible();
 
-  await page.locator("#logoLayoutInput").selectOption("vertical");
+  await (await reveal(page, "#logoLayoutInput")).selectOption("vertical");
   await expect(page.locator("#sideLogo")).toBeVisible();
   expect(await logosAreStacked(page)).toBe(true);
 
-  await page.locator("#showMainLogo").uncheck();
-  await page.locator("#showSideLogo").uncheck();
+  await (await reveal(page, "#showMainLogo")).uncheck();
+  await (await reveal(page, "#showSideLogo")).uncheck();
   await expect(page.locator("#logosCell")).toBeHidden();
   await expect(page.locator("#dividerCell")).toBeHidden();
 });
 
 test("resizes the main logo area", async function ({ page }) {
-  await page.locator("#areaWidthInput").fill("300");
+  await (await reveal(page, "#areaWidthInput")).fill("300");
   await expect(page.locator("#mainLogo")).toHaveCSS("width", "300px");
   await expect(page.locator("#areaWidthValue")).toHaveText("300px");
 });
 
 test("keeps the logo area value after switching language", async function ({ page }) {
-  await page.locator("#langSelect").selectOption("en");
-  await page.locator("#areaWidthInput").fill("300");
+  await (await reveal(page, "#langSelect")).selectOption("en");
+  await (await reveal(page, "#areaWidthInput")).fill("300");
 
-  await expect(page.locator("label[for='areaWidthInput']")).toHaveText("Width: 300px");
+  await expect(page.locator("label[for='areaWidthInput']")).toHaveText("Width 300px");
 });
 
 test("uploads a custom logo", async function ({ page }) {
@@ -115,14 +115,14 @@ test("uploads a custom logo", async function ({ page }) {
 });
 
 test("resets every field to its default", async function ({ page }) {
-  await page.locator("#nameInput").fill("Maria Silva");
-  await page.locator("#paletteGrid .palette").nth(2).click();
-  await page.locator("#showSideLogo").check();
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  await (await reveal(page, "#paletteGrid"), page.locator("#paletteGrid .palette").nth(2).click());
+  await (await reveal(page, "#showSideLogo")).check();
   page.once("dialog", async function (dialog) {
     expect(dialog.message()).toContain("Resetar apaga a assinatura salva");
     await dialog.accept();
   });
-  await page.locator("#resetBtn").click();
+  await (await reveal(page, "#resetBtn")).click();
 
   await expect(page.locator("#nameEl")).toHaveText("Nome Sobrenome");
   await expect(page.locator("#textColorInput")).toHaveValue("#1f3b73");

@@ -1,3 +1,4 @@
+import { captureClipboard, copiedContent, reveal } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 async function boxOf(page: Page, selector: string): Promise<{ x: number; y: number; width: number; height: number }> {
@@ -16,10 +17,10 @@ test.describe("contact fields", function () {
   test("adds optional contact lines with links in the accent color", async function ({ page }) {
     await expect(page.locator("#emailEl")).toHaveCount(0);
 
-    await page.locator("#emailInput").fill("maria@empresa.com");
-    await page.locator("#websiteInput").fill("www.empresa.com");
-    await page.locator("#linkedinInput").fill("maria-silva");
-    await page.locator("#instagramInput").fill("@empresa");
+    await (await reveal(page, "#emailInput")).fill("maria@empresa.com");
+    await (await reveal(page, "#websiteInput")).fill("www.empresa.com");
+    await (await reveal(page, "#linkedinInput")).fill("maria-silva");
+    await (await reveal(page, "#instagramInput")).fill("@empresa");
 
     await expect(page.locator("#emailEl")).toHaveText("E-mail: maria@empresa.com");
     await expect(page.locator("#emailEl a")).toHaveAttribute("href", "mailto:maria@empresa.com");
@@ -32,26 +33,23 @@ test.describe("contact fields", function () {
   });
 
   test("hides labels when disabled", async function ({ page }) {
-    await page.locator("#emailInput").fill("maria@empresa.com");
-    await page.locator("#showLabels").uncheck();
+    await (await reveal(page, "#emailInput")).fill("maria@empresa.com");
+    await (await reveal(page, "#showLabels")).uncheck();
 
     await expect(page.locator("#emailEl")).toHaveText("maria@empresa.com");
     await expect(page.locator("#phoneEl")).toHaveText("+55 (00) 0000-0000");
   });
 
-  test("copies contact links in the HTML", async function ({ page, context }) {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.locator("#showMainLogo").uncheck();
-    await page.locator("#emailInput").fill("maria@empresa.com");
+  test("copies contact links in the HTML", async function ({ page }) {
+    await captureClipboard(page);
+    await page.reload();
+    await (await reveal(page, "#showMainLogo")).uncheck();
+    await (await reveal(page, "#emailInput")).fill("maria@empresa.com");
     await page.locator("#copyHtmlBtn").click();
     await page.locator("#copyDialog").getByRole("button", { name: "Continuar" }).click();
+    await expect(page.locator("#copyDialog").getByText("Assinatura copiada")).toBeVisible();
 
-    const clipboard = await page.evaluate(async function () {
-      const items = await navigator.clipboard.read();
-      const htmlBlob = await items[0]?.getType("text/html");
-      const textBlob = await items[0]?.getType("text/plain");
-      return { html: (await htmlBlob?.text()) ?? "", text: (await textBlob?.text()) ?? "" };
-    });
+    const clipboard = await copiedContent(page);
     expect(clipboard.html).toContain('href="mailto:maria@empresa.com"');
     expect(clipboard.text).toContain("E-mail: maria@empresa.com");
   });
@@ -59,15 +57,15 @@ test.describe("contact fields", function () {
 
 test.describe("text style", function () {
   test("styles the selected line only", async function ({ page }) {
-    await page.locator("#lineSelect").selectOption("role");
+    await (await reveal(page, "#lineSelect")).selectOption("role");
     await expect(page.locator("#lineColorHint")).toHaveText("Sem cor própria, esta linha usa a cor de destaque da paleta.");
 
-    await page.locator("#fontSizeInput").fill("30");
-    await page.locator("#fontWeightInput").selectOption("700");
-    await page.locator("#italicInput").check();
-    await page.locator("#uppercaseInput").check();
-    await page.locator("#spacingTopInput").fill("20");
-    await page.locator("#indentInput").fill("12");
+    await (await reveal(page, "#fontSizeInput")).fill("30");
+    await (await reveal(page, "#fontWeightInput")).selectOption("700");
+    await (await reveal(page, "#italicInput")).check();
+    await (await reveal(page, "#uppercaseInput")).check();
+    await (await reveal(page, "#spacingTopInput")).fill("20");
+    await (await reveal(page, "#indentInput")).fill("12");
 
     const role = page.locator("#roleEl");
     await expect(role).toHaveCSS("font-size", "30px");
@@ -77,22 +75,22 @@ test.describe("text style", function () {
     await expect(role).toHaveCSS("padding-top", "20px");
     await expect(role).toHaveCSS("padding-left", "12px");
     await expect(page.locator("#fontSizeValue")).toHaveText("30px");
-    await expect(page.locator("#nameEl")).toHaveCSS("font-size", "46px");
+    await expect(page.locator("#nameEl")).toHaveCSS("font-size", "22px");
   });
 
   test("overrides and restores the line color", async function ({ page }) {
-    await page.locator("#lineSelect").selectOption("name");
+    await (await reveal(page, "#lineSelect")).selectOption("name");
     await expect(page.locator("#lineColorInput")).toBeDisabled();
-    await page.locator("#customColorInput").check();
-    await page.locator("#lineColorInput").fill("#aa0000");
+    await (await reveal(page, "#customColorInput")).check();
+    await (await reveal(page, "#lineColorInput")).fill("#aa0000");
 
     await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(170, 0, 0)");
     await expect(page.locator("#lineColorHint")).toHaveText("");
 
-    await page.locator("#paletteGrid .palette").nth(2).click();
+    await (await reveal(page, "#paletteGrid"), page.locator("#paletteGrid .palette").nth(2).click());
     await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(170, 0, 0)");
 
-    await page.getByRole("button", { name: "Restaurar estilo da linha" }).click();
+    await (await reveal(page, "#resetLineStyleBtn")).click();
     await expect(page.locator("#nameEl")).toHaveCSS("color", "rgb(15, 45, 117)");
     await expect(page.locator("#customColorInput")).not.toBeChecked();
   });
@@ -100,7 +98,7 @@ test.describe("text style", function () {
 
 test.describe("divider and layout", function () {
   test("the divider follows the content height by default", async function ({ page }) {
-    await page.locator("#areaHeightInput").fill("200");
+    await (await reveal(page, "#areaHeightInput")).fill("200");
     const divider = await boxOf(page, "#dividerCell");
     const logo = await boxOf(page, "#mainLogo");
 
@@ -109,11 +107,11 @@ test.describe("divider and layout", function () {
   });
 
   test("configures style, thickness and fixed length", async function ({ page }) {
-    await page.locator("#dividerStyleInput").selectOption("dashed");
-    await page.locator("#dividerThicknessInput").fill("5");
+    await (await reveal(page, "#dividerStyleInput")).selectOption("dashed");
+    await (await reveal(page, "#dividerThicknessInput")).fill("5");
     await expect(page.locator("#dividerLengthInput")).toBeDisabled();
-    await page.locator("#dividerHeightModeInput").selectOption("fixed");
-    await page.locator("#dividerLengthInput").fill("200");
+    await (await reveal(page, "#dividerHeightModeInput")).selectOption("fixed");
+    await (await reveal(page, "#dividerLengthInput")).fill("200");
 
     const bar = page.locator("#dividerBar");
     await expect(bar).toHaveCSS("border-left-style", "dashed");
@@ -122,13 +120,13 @@ test.describe("divider and layout", function () {
   });
 
   test("hides the divider", async function ({ page }) {
-    await page.locator("#showDividerInput").uncheck();
+    await (await reveal(page, "#showDividerInput")).uncheck();
     await expect(page.locator("#dividerCell")).toHaveCount(0);
     await expect(page.locator("#dividerStyleInput")).toBeDisabled();
   });
 
   test("places the logos to the right of the text", async function ({ page }) {
-    await page.locator("#arrangementInput").selectOption("logos-right");
+    await (await reveal(page, "#arrangementInput")).selectOption("logos-right");
     const text = await boxOf(page, "#nameEl");
     const logo = await boxOf(page, "#mainLogo");
     const divider = await boxOf(page, "#dividerCell");
@@ -138,8 +136,8 @@ test.describe("divider and layout", function () {
   });
 
   test("places the logos above the text with a horizontal divider", async function ({ page }) {
-    await page.locator("#arrangementInput").selectOption("logos-top");
-    await page.locator("#textAlignInput").selectOption("center");
+    await (await reveal(page, "#arrangementInput")).selectOption("logos-top");
+    await (await reveal(page, "#textAlignInput")).selectOption("center");
     const logo = await boxOf(page, "#mainLogo");
     const bar = await boxOf(page, "#dividerBar");
     const name = await boxOf(page, "#nameEl");
@@ -153,8 +151,8 @@ test.describe("divider and layout", function () {
   });
 
   test("adjusts the outer margins", async function ({ page }) {
-    await page.locator("#paddingXInput").fill("40");
-    await page.locator("#paddingYInput").fill("5");
+    await (await reveal(page, "#paddingXInput")).fill("40");
+    await (await reveal(page, "#paddingYInput")).fill("5");
     const table = await boxOf(page, "#sigTable");
     const logo = await boxOf(page, "#mainLogo");
 
@@ -163,11 +161,11 @@ test.describe("divider and layout", function () {
   });
 
   test("keeps layout, divider, contacts and styles after reload", async function ({ page }) {
-    await page.locator("#emailInput").fill("maria@empresa.com");
-    await page.locator("#arrangementInput").selectOption("logos-top");
-    await page.locator("#dividerStyleInput").selectOption("dotted");
-    await page.locator("#lineSelect").selectOption("role");
-    await page.locator("#fontSizeInput").fill("28");
+    await (await reveal(page, "#emailInput")).fill("maria@empresa.com");
+    await (await reveal(page, "#arrangementInput")).selectOption("logos-top");
+    await (await reveal(page, "#dividerStyleInput")).selectOption("dotted");
+    await (await reveal(page, "#lineSelect")).selectOption("role");
+    await (await reveal(page, "#fontSizeInput")).fill("28");
     await page.reload();
 
     await expect(page.locator("#emailInput")).toHaveValue("maria@empresa.com");

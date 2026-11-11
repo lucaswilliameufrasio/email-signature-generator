@@ -71,12 +71,12 @@ export const layoutLimits = {
 
 export function defaultTextStyle(key: LineKey): TextStyle {
   if (key === "name") {
-    return { fontSize: 46, fontWeight: 800, lineHeight: 1, letterSpacing: -0.3, spacingTop: 0, indent: 0, italic: false, uppercase: false };
+    return { fontSize: 22, fontWeight: 700, lineHeight: 1.2, letterSpacing: 0, spacingTop: 0, indent: 0, italic: false, uppercase: false };
   }
   if (key === "role") {
-    return { fontSize: 22, fontWeight: 400, lineHeight: 1.25, letterSpacing: 0, spacingTop: 10, indent: 0, italic: false, uppercase: false };
+    return { fontSize: 14, fontWeight: 400, lineHeight: 1.4, letterSpacing: 0, spacingTop: 4, indent: 0, italic: false, uppercase: false };
   }
-  return { fontSize: 22, fontWeight: 400, lineHeight: 1.2, letterSpacing: 0, spacingTop: 6, indent: 0, italic: false, uppercase: false };
+  return { fontSize: 13, fontWeight: 400, lineHeight: 1.5, letterSpacing: 0, spacingTop: 2, indent: 0, italic: false, uppercase: false };
 }
 
 export function defaultTextStyles(): Record<LineKey, TextStyle> {
@@ -92,11 +92,11 @@ export function defaultTextStyles(): Record<LineKey, TextStyle> {
 }
 
 export function defaultDivider(): DividerSettings {
-  return { show: true, thickness: 2, style: "solid", heightMode: "auto", length: 150, gapBefore: 30, gapAfter: 18 };
+  return { show: true, thickness: 2, style: "solid", heightMode: "auto", length: 100, gapBefore: 20, gapAfter: 16 };
 }
 
 export function defaultLayout(): LayoutSettings {
-  return { arrangement: "logos-left", textAlign: "left", paddingX: 20, paddingY: 18 };
+  return { arrangement: "logos-left", textAlign: "left", paddingX: 16, paddingY: 14 };
 }
 
 function isOneOf<Value extends string | number>(options: readonly Value[], value: unknown): value is Value {

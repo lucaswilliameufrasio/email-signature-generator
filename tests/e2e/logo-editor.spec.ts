@@ -1,5 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
+import { openTab, reveal } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 const twoColors = path.join(import.meta.dirname, "fixtures", "two-colors.png");
@@ -56,22 +57,23 @@ async function savedMainFrame(page: Page): Promise<Record<string, unknown>> {
 
 test.beforeEach(async function ({ page }) {
   await page.goto("/");
+  await openTab(page, "logos");
   await page.locator("#logoFileInput").setInputFiles(twoColors);
   await expect(page.locator("#exportStatus")).toHaveText("Logo carregada com sucesso.");
 });
 
 test("fits the area to the uploaded logo", async function ({ page }) {
-  await expect(page.locator("#areaHeightInput")).toHaveValue("130");
-  await expect(page.locator("#mainLogo")).toHaveCSS("height", "130px");
+  await expect(page.locator("#areaHeightInput")).toHaveValue("80");
+  await expect(page.locator("#mainLogo")).toHaveCSS("height", "80px");
   await expectColor(page, 0.25, 0.5, "red");
   await expectColor(page, 0.75, 0.5, "blue");
 });
 
 test("keeps the occupied area separate from the logo size", async function ({ page }) {
-  await page.locator("#zoomInput").fill("50");
+  await (await reveal(page, "#zoomInput")).fill("50");
 
-  await expect(page.locator("#mainLogo")).toHaveCSS("width", "260px");
-  await expect(page.locator("#mainLogo")).toHaveCSS("height", "130px");
+  await expect(page.locator("#mainLogo")).toHaveCSS("width", "160px");
+  await expect(page.locator("#mainLogo")).toHaveCSS("height", "80px");
   await expect(page.locator("#zoomValue")).toHaveText("50%");
   await expectColor(page, 0.1, 0.5, "transparent");
   await expectColor(page, 0.4, 0.5, "red");
@@ -79,24 +81,24 @@ test("keeps the occupied area separate from the logo size", async function ({ pa
 });
 
 test("aligns and nudges the logo inside the area", async function ({ page }) {
-  await page.locator("#zoomInput").fill("50");
+  await (await reveal(page, "#zoomInput")).fill("50");
   await page.getByRole("button", { name: "Esquerda", exact: true }).click();
 
   await expect(page.getByRole("button", { name: "Esquerda", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expectColor(page, 0.1, 0.5, "red");
   await expectColor(page, 0.75, 0.5, "transparent");
 
-  await page.locator("#offsetXInput").fill("130");
-  await expect(page.locator("#offsetXValue")).toHaveText("130px");
+  await (await reveal(page, "#offsetXInput")).fill("80");
+  await expect(page.locator("#offsetXValue")).toHaveText("80px");
   await expectColor(page, 0.1, 0.5, "transparent");
   await expectColor(page, 0.9, 0.5, "blue");
 });
 
 test("fills the area when cover is selected", async function ({ page }) {
-  await page.locator("#areaHeightInput").fill("40");
+  await (await reveal(page, "#areaHeightInput")).fill("40");
   await expectColor(page, 0.1, 0.5, "transparent");
 
-  await page.locator("#fitModeInput").selectOption("cover");
+  await (await reveal(page, "#fitModeInput")).selectOption("cover");
   await expectColor(page, 0.1, 0.5, "red");
   await expectColor(page, 0.9, 0.5, "blue");
 });
@@ -137,46 +139,46 @@ test("cancelling the crop keeps the logo unchanged", async function ({ page }) {
 });
 
 test("resets the framing but keeps the area", async function ({ page }) {
-  await page.locator("#zoomInput").fill("50");
-  await page.locator("#offsetYInput").fill("-20");
-  await page.locator("#fitModeInput").selectOption("cover");
-  await page.getByRole("button", { name: "Restaurar enquadramento" }).click();
+  await (await reveal(page, "#zoomInput")).fill("50");
+  await (await reveal(page, "#offsetYInput")).fill("-20");
+  await (await reveal(page, "#fitModeInput")).selectOption("cover");
+  await (await reveal(page, "#resetFrameBtn")).click();
 
   await expect(page.locator("#zoomInput")).toHaveValue("100");
   await expect(page.locator("#offsetYInput")).toHaveValue("0");
   await expect(page.locator("#fitModeInput")).toHaveValue("contain");
-  await expect(page.locator("#areaHeightInput")).toHaveValue("130");
+  await expect(page.locator("#areaHeightInput")).toHaveValue("80");
 });
 
 test("edits the secondary logo independently", async function ({ page }) {
-  await page.locator(".segmented").getByText("Logo secundária").click();
-  await page.locator("#areaWidthInput").fill("200");
+  await (await reveal(page, "#logoDrop"), page.locator(".logo-editor .segmented").getByText("Logo secundária").click());
+  await (await reveal(page, "#areaWidthInput")).fill("200");
 
   await expect(page.locator("#showSideLogo")).not.toBeChecked();
   await expect(page.locator("#sideLogo")).toHaveCount(0);
-  await expect(page.locator("#mainLogo")).toHaveCSS("width", "260px");
+  await expect(page.locator("#mainLogo")).toHaveCSS("width", "160px");
 
   await page.locator("#logoFileInput").setInputFiles(twoColors);
   await expect(page.locator("#showSideLogo")).toBeChecked();
   await expect(page.locator("#sideLogo")).toHaveCSS("width", "200px");
   await expect(page.locator("#sideLogo")).toHaveCSS("height", "100px");
 
-  await page.locator(".segmented").getByText("Logo principal").click();
-  await expect(page.locator("#areaWidthInput")).toHaveValue("260");
+  await page.locator(".logo-editor .segmented").getByText("Logo principal").click();
+  await expect(page.locator("#areaWidthInput")).toHaveValue("160");
 });
 
 test("exports images with explicit dimensions", async function ({ page }) {
-  await page.locator("#areaWidthInput").fill("200");
+  await (await reveal(page, "#areaWidthInput")).fill("200");
   const downloadPromise = page.waitForEvent("download");
-  await page.locator("#downloadHtmlBtn").click();
+  await (await reveal(page, "#downloadHtmlBtn")).click();
   const download = await downloadPromise;
   const htmlContent = (await readFile(await download.path())).toString("utf-8");
 
-  expect(htmlContent).toMatch(/<img[^>]*width="200"[^>]*height="130"/);
+  expect(htmlContent).toMatch(/<img[^>]*width="200"[^>]*height="80"/);
 });
 
 test("offers the adjusted logo for hosting in the copy flow", async function ({ page }) {
-  await page.locator("#copyHtmlBtn").click();
+  await (await reveal(page, "#copyHtmlBtn")).click();
   const dialog = page.locator("#copyDialog");
   await dialog.getByRole("button", { name: "Continuar" }).click();
   await dialog.getByRole("button", { name: "Sim, tenho a URL" }).click();
@@ -189,6 +191,6 @@ test("offers the adjusted logo for hosting in the copy flow", async function ({ 
 
   expect(download.suggestedFilename()).toBe("logo-principal.png");
   expect(content.subarray(1, 4).toString("ascii")).toBe("PNG");
-  expect(content.readUInt32BE(16)).toBe(780);
-  expect(content.readUInt32BE(20)).toBe(390);
+  expect(content.readUInt32BE(16)).toBe(480);
+  expect(content.readUInt32BE(20)).toBe(240);
 });

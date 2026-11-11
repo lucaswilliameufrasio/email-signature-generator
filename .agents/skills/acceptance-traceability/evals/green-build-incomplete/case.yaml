@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: green-build-incomplete
+expected_outcome: |
+  Delivery map separates implemented from verified, rejects an old green build
+  as proof of a dirty export change, and retains a real export validation gap.
+context:
+  scaffold_script: place-files.sh

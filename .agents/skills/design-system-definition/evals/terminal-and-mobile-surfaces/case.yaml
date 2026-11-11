@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: terminal-and-mobile-surfaces
+expected_outcome: |
+  Maps the same foundations to a TUI and a mobile app: color-depth tiers and
+  NO_COLOR, glyph fallbacks, minimum terminal size, safe areas, target sizes
+  and dynamic type, without forcing web conventions.

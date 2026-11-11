@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: scope-reduction
+expected_outcome: |
+  Updates the acceptance map to the latest scope, retaining identifiers and
+  exclusions without calling stale evidence or unexecuted tests verified.
+context:
+  scaffold_script: place-files.sh

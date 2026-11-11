@@ -1,0 +1,17 @@
+{
+  "skill_name": "explicit-code-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Refactor this TypeScript snippet to follow our style: `if (!account) return; rows.forEach((row) => save(row)); let selected: string | null = null;`",
+      "expected_output": "Uses a multiline braced if, an explicit loop instead of forEach, and an optional/undefined representation for absence without changing unrelated behavior.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "In Rust, make this iterator side effect easier to step through and handle a conditional branch: `items.iter().for_each(|item| save(item)); if failed { return Err(error); }`",
+      "expected_output": "Uses an explicit loop and multiline if block with valid Rust syntax; does not introduce JavaScript-specific undefined/null advice into Rust.",
+      "files": []
+    }
+  ]
+}

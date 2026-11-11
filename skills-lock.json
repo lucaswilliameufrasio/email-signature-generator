@@ -1,23 +1,113 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
+    "acceptance-traceability": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/acceptance-traceability/SKILL.md",
+      "computedHash": "f87f5f7b7b64a5e99fc35b479165eb76acc41eec4291343d082a4cc86b7aafd9"
+    },
     "caveman": {
       "source": "juliusbrussee/caveman",
       "sourceType": "github",
       "skillPath": "skills/caveman/SKILL.md",
-      "computedHash": "dfbf85749fd474feeb0bbe60c779795ecd5dbec0083299b56e68916bc3ddd8c9"
+      "computedHash": "e1c739abf9187d064075ee91f4d8c74daa97a3caa4a8630861b12acf0cd79e5a"
+    },
+    "conventional-commits": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/conventional-commits/SKILL.md",
+      "computedHash": "a0ca857f44f6e8751c78c3fba0ce8c3113968bfa728f8a60d2895fe186639f66"
+    },
+    "create-verification-skill": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/create-verification-skill/SKILL.md",
+      "computedHash": "b18484b06d61f4a30cd1563be7b5f506024d16e81d2bfd8e7e5d45824a41b4f4"
+    },
+    "design-system-definition": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/design-system-definition/SKILL.md",
+      "computedHash": "faee942816fd26d27b1f2a0dc4f6a206f22324dffd32971ddb6f004254358b49"
+    },
+    "diagnosing-bugs": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "computedHash": "87c78ae966e591f9ceb177789cc5cc9de69277cd26679ffd36ca5300f430d513"
+    },
+    "document-decisions": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/document-decisions/SKILL.md",
+      "computedHash": "bfa338c5ce487f951a3cbeb8d9fff6ef7e30d04308579a2c63bc891b030f7fb1"
+    },
+    "explicit-code-style": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/explicit-code-style/SKILL.md",
+      "computedHash": "d6b93824c5e1694a59edd4c9ac45da0dacb3cf5b05791a680925b628d2754843"
+    },
+    "github-gitea-actions": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/github-gitea-actions/SKILL.md",
+      "computedHash": "73c7aeff141d3ba258256ff2d9dfe1be33cbdcc54d29cb816b46e096202f5f55"
     },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grill-me/SKILL.md",
-      "computedHash": "784f0dbb7403b0f00324bce9a112f715342777a0daee7bbb7385f9c6f0a170ea"
+      "computedHash": "ae5af68feccb5e86b50179641598729295d079bf35489aa745be0436252e3cd9"
     },
     "grill-with-docs": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
-      "computedHash": "eb0e91e84277283dc2b23ed544399e53afd6b5287e5b6929f25fe8aa608e164b"
+      "computedHash": "989f2731fa89f3a18701935e61e7cdf54a2ba5d2d06c095da18440b3ad693bd0"
+    },
+    "interface-redesign": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/interface-redesign/SKILL.md",
+      "computedHash": "a3f2b96c8b6058daa55bc90cf49eb5ab6d65f4a4525a7a2ee6db66c2564fd1ac"
+    },
+    "system-module-architecture": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/system-module-architecture/SKILL.md",
+      "computedHash": "da882926ab1129c05d974fba5aa9adb368c0fc343a602b1949be1a98c8c266ed"
+    },
+    "tdd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/tdd/SKILL.md",
+      "computedHash": "e3e0f78ff1c2d52ffefa0378baa1e80e129d359288cf9a56f4e59afcd2aac86c"
+    },
+    "testing-standard": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/testing-standard/SKILL.md",
+      "computedHash": "750a65d76edc9a116dbb02c8a4c7e71354c579cf9f61934d86a6f3c065ef1ea5"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "ff6863fc7c1be035b294703b2e7c90b2197548985ca4cb98f58740a7e84dc0cc"
+    },
+    "web-capability-architecture": {
+      "source": "lucaswilliameufrasio/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-capability-architecture/SKILL.md",
+      "computedHash": "551e9a2b580fda270214a44f3126517a5b22e8d3194991e0ca50613c1eb9e4b7"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "4f68ae07187fb0d1fb78c88b503d089da4cf5a9d9625d1f2e425b1590bf96d92"
     }
   }
 }

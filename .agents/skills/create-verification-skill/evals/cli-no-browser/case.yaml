@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: cli-no-browser
+expected_outcome: |
+  Selects the existing CLI test/PTY path rather than assuming a browser, avoids
+  installing Playwright, and distinguishes a drafted verifier from a journey
+  that was actually run.

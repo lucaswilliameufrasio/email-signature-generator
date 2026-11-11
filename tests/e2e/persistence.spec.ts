@@ -1,0 +1,108 @@
+import path from "node:path";
+import { expect, test } from "@playwright/test";
+import { logosAreStacked, reveal } from "./helpers";
+
+const logoFixture = path.join(import.meta.dirname, "fixtures", "logo.png");
+
+test.beforeEach(async function ({ page }) {
+  await page.goto("/");
+});
+
+test("restores the signature after reloading", async function ({ page }) {
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  await (await reveal(page, "#phoneInput")).fill("");
+  await (await reveal(page, "#showCountryCode")).uncheck();
+  await (await reveal(page, "#fontFamilyInput")).selectOption({ label: "Georgia" });
+  await (await reveal(page, "#paletteGrid"), page.locator("#paletteGrid .palette").nth(2).click());
+  await (await reveal(page, "#showSideLogo")).check();
+  await (await reveal(page, "#logoLayoutInput")).selectOption("vertical");
+  await (await reveal(page, "#areaWidthInput")).fill("300");
+  await page.locator("#logoFileInput").setInputFiles(logoFixture);
+  await (await reveal(page, "#zoomInput")).fill("80");
+  await (await reveal(page, "#exportFormatInput")).selectOption("webp");
+  await (await reveal(page, "#exportQualityInput")).fill("70");
+  await (await reveal(page, "#exportScaleInput")).selectOption("3");
+
+  await page.reload();
+
+  await expect(page.locator("#nameInput")).toHaveValue("Maria Silva");
+  await expect(page.locator("#nameEl")).toHaveText("Maria Silva");
+  await expect(page.locator("#phoneEl")).toBeHidden();
+  await expect(page.locator("#showCountryCode")).not.toBeChecked();
+  await expect(page.locator("#fontFamilyInput")).toHaveValue("'Georgia',serif");
+  await expect(page.locator("#textColorInput")).toHaveValue("#0f2d75");
+  await expect(page.locator("#showSideLogo")).toBeChecked();
+  expect(await logosAreStacked(page)).toBe(true);
+  await expect(page.locator("#areaWidthInput")).toHaveValue("300");
+  await expect(page.locator("#zoomInput")).toHaveValue("80");
+  await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
+  await expect(page.locator("#exportFormatInput")).toHaveValue("webp");
+  await expect(page.locator("#exportQualityInput")).toHaveValue("70");
+  await expect(page.locator("#exportScaleInput")).toHaveValue("3");
+});
+
+test("restores the chosen language and keeps untouched fields translated", async function ({ page }) {
+  await (await reveal(page, "#roleInput")).fill("Engenharia");
+  await (await reveal(page, "#langSelect")).selectOption("en");
+  await page.reload();
+
+  await expect(page.locator("#langSelect")).toHaveValue("en");
+  await expect(page.locator("h1")).toHaveText("Signature Generator");
+  await expect(page.locator("#roleInput")).toHaveValue("Engenharia");
+  await expect(page.locator("#nameInput")).toHaveValue("John Doe");
+});
+
+test("reset clears the saved signature", async function ({ page }) {
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  page.once("dialog", async function (dialog) {
+    await dialog.accept();
+  });
+  await (await reveal(page, "#resetBtn")).click();
+  await page.reload();
+
+  await expect(page.locator("#nameInput")).toHaveValue("Nome Sobrenome");
+});
+
+test("cancelling reset keeps the signature", async function ({ page }) {
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  page.once("dialog", async function (dialog) {
+    await dialog.dismiss();
+  });
+  await (await reveal(page, "#resetBtn")).click();
+
+  await expect(page.locator("#nameEl")).toHaveText("Maria Silva");
+});
+
+test("ignores a corrupted saved signature", async function ({ page }) {
+  await page.evaluate(function () {
+    localStorage.setItem("email-signature-generator:state:v1", "{broken");
+  });
+  await page.reload();
+
+  await expect(page.locator("#nameEl")).toHaveText("Nome Sobrenome");
+});
+
+test("keeps working when the logo is too large to save", async function ({ page }) {
+  await page.evaluate(function () {
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (value.includes("data:image/png")) {
+        throw new DOMException("Quota exceeded", "QuotaExceededError");
+      }
+      originalSetItem.call(this, key, value);
+    };
+  });
+  await (await reveal(page, "#nameInput")).fill("Maria Silva");
+  await page.locator("#logoFileInput").setInputFiles(logoFixture);
+
+  await expect(page.locator("#exportStatus")).toContainText("grandes demais para salvar");
+  await expect(page.locator("#mainLogo")).toHaveAttribute("src", /^data:image\/png;base64,/);
+
+  await page.reload();
+  await expect(page.locator("#nameEl")).toHaveText("Maria Silva");
+  const savedSource = await page.evaluate(function () {
+    const saved: unknown = JSON.parse(localStorage.getItem("email-signature-generator:state:v1") ?? "{}");
+    return JSON.stringify(saved).includes("data:image/png");
+  });
+  expect(savedSource).toBe(false);
+});

@@ -4,1065 +4,539 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title data-i18n="title">Gerador de Assinatura de E-mail</title>
-  <style>
-    :root{
-      --panel:#ffffff;
-      --line:#d8dbe2;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:#f6f7fb;
-      color:#1a1a1a;
-      padding:20px;
-    }
-    .wrap{
-      max-width:1320px;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:430px 1fr;
-      gap:16px;
-    }
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:14px;
-      max-height:calc(100vh - 40px);
-      overflow:auto;
-    }
-    .preview{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:16px;
-      min-width:0;
-      overflow:auto;
-    }
-    .lang-bar{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin-bottom:12px;
-    }
-    .lang-bar label{
-      font-size:12px;
-      font-weight:700;
-      white-space:nowrap;
-    }
-    .lang-bar select{
-      font-size:12px;
-      padding:4px 8px;
-      border:1px solid var(--line);
-      border-radius:6px;
-      background:var(--panel);
-      cursor:pointer;
-    }
-    h1{
-      margin:0 0 12px;
-      font-size:20px;
-    }
-    .group{
-      border:1px solid #e3e7ef;
-      border-radius:10px;
-      padding:10px;
-      margin-bottom:10px;
-      background:#fff;
-    }
-    .group h3{
-      margin:0 0 8px;
-      font-size:13px;
-      color:#33415c;
-      text-transform:uppercase;
-      letter-spacing:.4px;
-    }
-    .field{margin-bottom:10px}
-    .field label{
-      display:block;
-      font-size:12px;
-      font-weight:700;
-      margin-bottom:6px;
-    }
-    input[type="text"],
-    input[type="tel"],
-    input[type="color"],
-    select{
-      width:100%;
-      border:1px solid #cfd4df;
-      border-radius:8px;
-      padding:9px 10px;
-      font-size:14px;
-      background:#fff;
-    }
-    input[type="range"]{width:100%}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-    .dropzone{
-      border:2px dashed #b9c2d3;
-      border-radius:10px;
-      padding:10px;
-      text-align:center;
-      background:#fafbfe;
-      transition:.15s ease;
-      font-size:12px;
-      color:#4d5b78;
-    }
-    .dropzone.dragover{
-      border-color:#1e3a8a;
-      background:#eef3ff;
-    }
-    .dropzone strong{
-      display:block;
-      font-size:13px;
-      color:#223056;
-      margin-bottom:4px;
-    }
-    .dropzone input{
-      margin-top:6px;
-      width:100%;
-    }
-    .palette-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:8px;
-      margin-top:6px;
-    }
-    .palette{
-      border:1px solid #ccd3e0;
-      border-radius:8px;
-      padding:8px;
-      cursor:pointer;
-      background:#fff;
-      text-align:left;
-      font-size:12px;
-    }
-    .swatches{display:flex;gap:4px;margin-bottom:6px}
-    .sw{
-      width:14px;
-      height:14px;
-      border-radius:50%;
-      border:1px solid #b7bfd1;
-    }
-    .checkline{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      font-size:13px;
-      margin-top:4px;
-    }
-    .btns{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-    button{
-      border:0;
-      border-radius:8px;
-      padding:10px 12px;
-      font-weight:700;
-      cursor:pointer;
-    }
-    .primary{background:#112b66;color:#fff}
-    .secondary{background:#44506a;color:#fff}
-    .ghost{background:#eef1f7;color:#1f2a44}
-    .hint{
-      font-size:12px;
-      color:#616b7d;
-      line-height:1.4;
-      margin-top:8px;
-    }
-    .mini{
-      font-size:11px;
-      color:#6b7280;
-    }
-    #exportStatus{
-      margin-top:8px;
-      font-size:12px;
-      color:#1f2a44;
-      min-height:16px;
-    }
-    @media (max-width:1100px){
-      .wrap{grid-template-columns:1fr}
-      .panel{max-height:none}
-    }
-  </style>
+  <script>
+    (function () {
+      var preference = "system";
+      try {
+        preference = localStorage.getItem("email-signature-generator:theme") || "system";
+      } catch (error) {
+        preference = "system";
+      }
+      var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var dark = preference === "dark" || (preference !== "light" && prefersDark);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    })();
+  </script>
+  <link rel="stylesheet" href="/src/styles/app.css" />
 </head>
 <body>
-  <div class="wrap">
-    <aside class="panel">
+  <header class="app-header">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
       <h1 data-i18n="title">Gerador de assinatura</h1>
+    </div>
+    <div class="header-actions">
+      <label for="langSelect" class="visually-hidden" data-i18n="languageLabel">Idioma</label>
+      <select id="langSelect" class="compact-select">
+        <option value="pt-BR">Português (BR)</option>
+        <option value="en">English</option>
+      </select>
+      <div class="segmented theme-switch" role="radiogroup" aria-labelledby="themeLabel">
+        <span id="themeLabel" class="visually-hidden" data-i18n="themeLabel">Tema</span>
+        <label><input type="radio" name="themePreference" value="system" checked> <span data-i18n="themeSystem">Sistema</span></label>
+        <label><input type="radio" name="themePreference" value="light"> <span data-i18n="themeLight">Claro</span></label>
+        <label><input type="radio" name="themePreference" value="dark"> <span data-i18n="themeDark">Escuro</span></label>
+      </div>
+      <button id="resetBtn" type="button" class="ghost small" data-i18n="reset">Resetar</button>
+    </div>
+  </header>
 
-      <div class="lang-bar">
-        <label data-i18n="languageLabel">Idioma</label>
-        <select id="langSelect">
-          <option value="pt-BR">Português (BR)</option>
-          <option value="en">English</option>
-        </select>
+  <main class="workspace">
+
+    <section class="editor" aria-labelledby="editorTitle">
+      <h2 id="editorTitle" class="visually-hidden" data-i18n="editorTitle">Editor</h2>
+      <div class="tabs" role="tablist" aria-labelledby="editorTitle">
+        <button type="button" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+          <span data-i18n="tabContent">Conteúdo</span>
+        </button>
+        <button type="button" role="tab" id="tab-logos" aria-controls="panel-logos" aria-selected="false" tabindex="-1">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.75"/><circle cx="9" cy="10" r="1.75" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m4 17 5-4.5 3.5 3 3-2.5 4.5 4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+          <span data-i18n="tabLogos">Logos</span>
+        </button>
+        <button type="button" role="tab" id="tab-text" aria-controls="panel-text" aria-selected="false" tabindex="-1">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 9 6l5 12M5.8 14h6.4M15 18v-6.5a2.5 2.5 0 0 1 5 0V18m0-3.5h-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-i18n="tabText">Texto</span>
+        </button>
+        <button type="button" role="tab" id="tab-layout" aria-controls="panel-layout" aria-selected="false" tabindex="-1">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M10 4.5v15M10 12h10.5" fill="none" stroke="currentColor" stroke-width="1.75"/></svg>
+          <span data-i18n="tabLayout">Layout e cores</span>
+        </button>
       </div>
 
-      <div class="group">
-        <h3 data-i18n="dataGroup">Dados</h3>
-        <div class="field">
-          <label data-i18n="nameLabel">Nome</label>
-          <input id="nameInput" type="text" value="Nome Sobrenome" data-i18n-placeholder="namePlaceholder" data-i18n-value="nameValue">
-        </div>
-        <div class="field">
-          <label data-i18n="roleLabel">Cargo</label>
-          <input id="roleInput" type="text" value="Cargo ou área" data-i18n-placeholder="rolePlaceholder" data-i18n-value="roleValue">
-        </div>
-        <div class="field">
-          <label data-i18n="phoneLabel">Telefone</label>
-          <input id="phoneInput" type="tel" value="+55 (00) 0000-0000" data-i18n-placeholder="phonePlaceholder" data-i18n-value="phoneValue">
-        </div>
-        <label class="checkline"><input type="checkbox" id="showCountryCode" checked> <span data-i18n="showCountryCode">Mostrar código do país</span></label>
-      </div>
-
-      <div class="group">
-        <h3 data-i18n="fontGroup">Fonte</h3>
-        <div class="field">
-          <label data-i18n="fontFamilyLabel">Família da fonte</label>
-          <select id="fontFamilyInput">
-            <option value="Arial,Helvetica,sans-serif">Arial</option>
-            <option value="'Trebuchet MS',Arial,sans-serif">Trebuchet MS</option>
-            <option value="'Segoe UI',Tahoma,Arial,sans-serif">Segoe UI</option>
-            <option value="Verdana,Geneva,sans-serif">Verdana</option>
-            <option value="'Tahoma',Arial,sans-serif">Tahoma</option>
-            <option value="'Georgia',serif">Georgia</option>
-            <option value="'Times New Roman',Times,serif">Times New Roman</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="group">
-        <h3 data-i18n="logosGroup">Logos</h3>
-
-        <div class="row2">
-          <label class="checkline"><input type="checkbox" id="showMainLogo"> <span data-i18n="showMainLogoCheck">Mostrar logo principal</span></label>
-          <label class="checkline"><input type="checkbox" id="showSideLogo"> <span data-i18n="showSideLogoCheck">Mostrar logo secundária</span></label>
-        </div>
-
-        <div class="field">
-          <label data-i18n="logoLayoutLabel">Posicionamento das logos</label>
-          <select id="logoLayoutInput">
-            <option value="horizontal" data-i18n-opt="logoLayoutHorizontal">Lado a lado</option>
-            <option value="vertical" data-i18n-opt="logoLayoutVertical">Empilhadas</option>
-          </select>
-        </div>
-
-        <div class="row2">
+      <div class="tab-panel" role="tabpanel" id="panel-content" aria-labelledby="tab-content" tabindex="0">
+        <div class="section">
+          <h3 data-i18n="dataGroup">Dados</h3>
           <div class="field">
-            <label data-i18n="mainLogoWidth">Largura logo principal: <span id="mainSizeLabel">260px</span></label>
-            <input id="mainLogoWidthInput" type="range" min="60" max="520" step="5" value="260">
+            <label for="nameInput" data-i18n="nameLabel">Nome</label>
+            <input id="nameInput" type="text" autocomplete="name" data-i18n-placeholder="namePlaceholder">
           </div>
           <div class="field">
-            <label data-i18n="sideLogoWidth">Largura logo secundária: <span id="sideSizeLabel">120px</span></label>
-            <input id="sideLogoWidthInput" type="range" min="40" max="300" step="5" value="120">
+            <label for="roleInput" data-i18n="roleLabel">Cargo</label>
+            <input id="roleInput" type="text" autocomplete="organization-title" data-i18n-placeholder="rolePlaceholder">
+          </div>
+          <div class="field">
+            <label for="phoneInput" data-i18n="phoneLabel">Telefone</label>
+            <input id="phoneInput" type="tel" autocomplete="tel" data-i18n-placeholder="phonePlaceholder">
+            <label class="checkline"><input type="checkbox" id="showCountryCode" checked> <span data-i18n="showCountryCode">Mostrar código do país</span></label>
           </div>
         </div>
-
-        <div class="field">
-          <label data-i18n="mainLogoLabel">Logo principal</label>
-          <div id="mainDrop" class="dropzone">
-            <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
-            <span data-i18n="dropzoneOr">ou selecione um arquivo:</span>
-            <input id="mainLogoInput" type="file" accept="image/*">
+        <div class="section">
+          <h3 data-i18n="contactsGroup">Contatos e redes</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label for="emailInput" data-i18n="emailLabel">E-mail</label>
+              <input id="emailInput" type="text" inputmode="email" autocomplete="email" data-i18n-placeholder="emailPlaceholder">
+            </div>
+            <div class="field">
+              <label for="websiteInput" data-i18n="websiteLabel">Site</label>
+              <input id="websiteInput" type="text" inputmode="url" autocomplete="url" data-i18n-placeholder="websitePlaceholder">
+            </div>
+            <div class="field">
+              <label for="linkedinInput" data-i18n="linkedinLabel">LinkedIn</label>
+              <input id="linkedinInput" type="text" data-i18n-placeholder="linkedinPlaceholder">
+            </div>
+            <div class="field">
+              <label for="instagramInput" data-i18n="instagramLabel">Instagram</label>
+              <input id="instagramInput" type="text" data-i18n-placeholder="instagramPlaceholder">
+            </div>
           </div>
-        </div>
-
-        <div class="field">
-          <label data-i18n="sideLogoLabel">Logo secundária</label>
-          <div id="sideDrop" class="dropzone">
-            <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
-            <span data-i18n="dropzoneOr">ou selecione um arquivo:</span>
-            <input id="sideLogoInput" type="file" accept="image/*">
-          </div>
+          <p class="hint" data-i18n="optionalFieldsHint">Campos vazios não aparecem na assinatura.</p>
+          <label class="checkline"><input type="checkbox" id="showLabels" checked> <span data-i18n="showLabels">Mostrar rótulos (Telefone:, E-mail:...)</span></label>
         </div>
       </div>
 
-      <div class="group">
-        <h3 data-i18n="colorsGroup">Cores</h3>
+      <div class="tab-panel" role="tabpanel" id="panel-logos" aria-labelledby="tab-logos" tabindex="0" hidden>
+        <div class="section">
+          <h3 data-i18n="logosGroup">Logos</h3>
+          <div class="grid-2">
+            <label class="checkline"><input type="checkbox" id="showMainLogo"> <span data-i18n="showMainLogoCheck">Mostrar logo principal</span></label>
+            <label class="checkline"><input type="checkbox" id="showSideLogo"> <span data-i18n="showSideLogoCheck">Mostrar logo secundária</span></label>
+          </div>
+          <div class="field">
+            <label for="logoLayoutInput" data-i18n="logoLayoutLabel">Posicionamento das logos</label>
+            <select id="logoLayoutInput">
+              <option value="horizontal" data-i18n-opt="logoLayoutHorizontal">Lado a lado</option>
+              <option value="vertical" data-i18n-opt="logoLayoutVertical">Empilhadas</option>
+            </select>
+          </div>
+        </div>
 
-        <div class="field">
-          <label data-i18n="palettesLabel">Paletas</label>
+        <div class="section logo-editor">
+          <div class="segmented" role="radiogroup" aria-labelledby="logoTargetLabel">
+            <span id="logoTargetLabel" class="segmented-title" data-i18n="logoTargetLabel">Editar</span>
+            <label><input type="radio" name="logoTarget" value="main" checked> <span data-i18n="logoTargetMain">Logo principal</span></label>
+            <label><input type="radio" name="logoTarget" value="side"> <span data-i18n="logoTargetSide">Logo secundária</span></label>
+          </div>
+
+          <div id="logoDrop" class="dropzone">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <strong data-i18n="dropzoneText">Arraste e solte a imagem aqui</strong>
+            <label for="logoFileInput" class="file-label"><span data-i18n="dropzoneOr">ou selecione um arquivo</span></label>
+            <input id="logoFileInput" type="file" accept="image/*">
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="areaWidthInput"><span data-i18n="areaWidthLabel">Largura</span> <span id="areaWidthValue" class="value">260px</span></label>
+              <input id="areaWidthInput" type="range" min="40" max="520" step="1" value="260">
+            </div>
+            <div class="field">
+              <label for="areaHeightInput"><span data-i18n="areaHeightLabel">Altura</span> <span id="areaHeightValue" class="value">79px</span></label>
+              <input id="areaHeightInput" type="range" min="20" max="240" step="1" value="79">
+            </div>
+          </div>
+          <p class="hint" data-i18n="areaHint">Largura e altura definem a área que a logo ocupa na assinatura.</p>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="fitModeInput" data-i18n="fitModeLabel">Encaixe</label>
+              <select id="fitModeInput">
+                <option value="contain" data-i18n-opt="fitContain">Caber inteira</option>
+                <option value="cover" data-i18n-opt="fitCover">Preencher a área</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-title" id="alignLabel" data-i18n="alignLabel">Alinhamento</span>
+              <div class="align-grid" role="group" aria-labelledby="alignLabel">
+                <button type="button" data-align="top-left" data-i18n-aria="alignTopLeft" aria-label="Topo à esquerda"></button>
+                <button type="button" data-align="top" data-i18n-aria="alignTop" aria-label="Topo"></button>
+                <button type="button" data-align="top-right" data-i18n-aria="alignTopRight" aria-label="Topo à direita"></button>
+                <button type="button" data-align="left" data-i18n-aria="alignLeft" aria-label="Esquerda"></button>
+                <button type="button" data-align="center" data-i18n-aria="alignCenter" aria-label="Centro"></button>
+                <button type="button" data-align="right" data-i18n-aria="alignRight" aria-label="Direita"></button>
+                <button type="button" data-align="bottom-left" data-i18n-aria="alignBottomLeft" aria-label="Base à esquerda"></button>
+                <button type="button" data-align="bottom" data-i18n-aria="alignBottom" aria-label="Base"></button>
+                <button type="button" data-align="bottom-right" data-i18n-aria="alignBottomRight" aria-label="Base à direita"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="btns">
+            <button id="cropBtn" type="button" class="secondary small" data-i18n="cropButton">Cortar imagem</button>
+            <button id="removeCropBtn" type="button" class="ghost small" data-i18n="removeCropButton" hidden>Remover corte</button>
+            <button id="fitAreaBtn" type="button" class="ghost small" data-i18n="fitAreaButton">Ajustar área à logo</button>
+          </div>
+
+          <details class="fine-tune">
+            <summary data-i18n="fineTune">Ajuste fino</summary>
+            <div class="field">
+              <label for="zoomInput"><span data-i18n="zoomLabel">Tamanho da logo</span> <span id="zoomValue" class="value">100%</span></label>
+              <input id="zoomInput" type="range" min="10" max="400" step="1" value="100">
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="offsetXInput"><span data-i18n="offsetXLabel">Ajuste horizontal</span> <span id="offsetXValue" class="value">0px</span></label>
+                <input id="offsetXInput" type="range" min="-300" max="300" step="1" value="0">
+              </div>
+              <div class="field">
+                <label for="offsetYInput"><span data-i18n="offsetYLabel">Ajuste vertical</span> <span id="offsetYValue" class="value">0px</span></label>
+                <input id="offsetYInput" type="range" min="-300" max="300" step="1" value="0">
+              </div>
+            </div>
+            <button id="resetFrameBtn" type="button" class="ghost small" data-i18n="resetFrameButton">Restaurar enquadramento</button>
+          </details>
+        </div>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-text" aria-labelledby="tab-text" tabindex="0" hidden>
+        <div class="section">
+          <h3 data-i18n="fontGroup">Fonte</h3>
+          <div class="field">
+            <label for="fontFamilyInput" data-i18n="fontFamilyLabel">Família da fonte</label>
+            <select id="fontFamilyInput"></select>
+          </div>
+        </div>
+        <div class="section">
+          <h3 data-i18n="textStyleGroup">Estilo dos textos</h3>
+          <div class="field">
+            <label for="lineSelect" data-i18n="lineSelectLabel">Linha</label>
+            <select id="lineSelect">
+              <option value="name" data-i18n-opt="nameLabel">Nome</option>
+              <option value="role" data-i18n-opt="roleLabel">Cargo</option>
+              <option value="phone" data-i18n-opt="phoneLabel">Telefone</option>
+              <option value="email" data-i18n-opt="emailLabel">E-mail</option>
+              <option value="website" data-i18n-opt="websiteLabel">Site</option>
+              <option value="linkedin" data-i18n-opt="linkedinLabel">LinkedIn</option>
+              <option value="instagram" data-i18n-opt="instagramLabel">Instagram</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="fontSizeInput"><span data-i18n="fontSizeLabel">Tamanho</span> <span id="fontSizeValue" class="value">22px</span></label>
+              <input id="fontSizeInput" type="range" min="8" max="72" step="1">
+            </div>
+            <div class="field">
+              <label for="fontWeightInput" data-i18n="fontWeightLabel">Peso</label>
+              <select id="fontWeightInput">
+                <option value="400" data-i18n-opt="weightRegular">Normal</option>
+                <option value="500" data-i18n-opt="weightMedium">Médio</option>
+                <option value="600" data-i18n-opt="weightSemibold">Seminegrito</option>
+                <option value="700" data-i18n-opt="weightBold">Negrito</option>
+                <option value="800" data-i18n-opt="weightExtraBold">Extra negrito</option>
+              </select>
+            </div>
+          </div>
+          <div class="color-row">
+            <label class="checkline"><input type="checkbox" id="customColorInput"> <span data-i18n="customColorLabel">Cor própria</span></label>
+            <input id="lineColorInput" type="color" value="#1f3b73" aria-labelledby="customColorLabelText" disabled>
+            <span id="customColorLabelText" class="visually-hidden" data-i18n="lineColorLabel">Cor da linha</span>
+          </div>
+          <p class="hint" id="lineColorHint"></p>
+
+          <details class="fine-tune">
+            <summary data-i18n="fineTune">Ajuste fino</summary>
+            <div class="grid-2">
+              <div class="field">
+                <label for="spacingTopInput"><span data-i18n="spacingTopLabel">Espaço acima</span> <span id="spacingTopValue" class="value">0px</span></label>
+                <input id="spacingTopInput" type="range" min="0" max="60" step="1">
+              </div>
+              <div class="field">
+                <label for="indentInput"><span data-i18n="indentLabel">Recuo</span> <span id="indentValue" class="value">0px</span></label>
+                <input id="indentInput" type="range" min="0" max="120" step="1">
+              </div>
+              <div class="field">
+                <label for="letterSpacingInput"><span data-i18n="letterSpacingLabel">Espaço entre letras</span> <span id="letterSpacingValue" class="value">0px</span></label>
+                <input id="letterSpacingInput" type="range" min="-3" max="10" step="0.1">
+              </div>
+              <div class="field">
+                <label for="lineHeightInput"><span data-i18n="lineHeightLabel">Altura da linha</span> <span id="lineHeightValue" class="value">1</span></label>
+                <input id="lineHeightInput" type="range" min="0.8" max="2" step="0.05">
+              </div>
+            </div>
+            <div class="grid-2">
+              <label class="checkline"><input type="checkbox" id="italicInput"> <span data-i18n="italicLabel">Itálico</span></label>
+              <label class="checkline"><input type="checkbox" id="uppercaseInput"> <span data-i18n="uppercaseLabel">Maiúsculas</span></label>
+            </div>
+            <button id="resetLineStyleBtn" type="button" class="ghost small" data-i18n="resetLineStyle">Restaurar estilo da linha</button>
+          </details>
+        </div>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-layout" aria-labelledby="tab-layout" tabindex="0" hidden>
+        <div class="section">
+          <h3 data-i18n="colorsGroup">Cores</h3>
+          <span class="field-title" data-i18n="palettesLabel">Paletas</span>
           <div class="palette-grid" id="paletteGrid"></div>
+          <div class="color-grid">
+            <div class="color-field">
+              <input id="textColorInput" type="color" value="#1f3b73" aria-describedby="textColorUsage">
+              <div>
+                <label for="textColorInput" data-i18n="textColorLabel">Cor do texto</label>
+                <span id="textColorUsage" class="hint" data-i18n="textColorUsage">Usada em: nome, telefone e rótulos</span>
+              </div>
+            </div>
+            <div class="color-field">
+              <input id="accentColorInput" type="color" value="#37b37e" aria-describedby="accentColorUsage">
+              <div>
+                <label for="accentColorInput" data-i18n="accentColorLabel">Cor de destaque</label>
+                <span id="accentColorUsage" class="hint" data-i18n="accentColorUsage">Usada em: cargo e links</span>
+              </div>
+            </div>
+            <div class="color-field">
+              <input id="dividerColorInput" type="color" value="#1f3b73" aria-describedby="dividerColorUsage">
+              <div>
+                <label for="dividerColorInput" data-i18n="dividerColorLabel">Cor do divisor</label>
+                <span id="dividerColorUsage" class="hint" data-i18n="dividerColorUsage">Usada em: barra divisória</span>
+              </div>
+            </div>
+            <div class="color-field">
+              <input id="bgColorInput" type="color" value="#f3f4f6" aria-describedby="bgColorUsage">
+              <div>
+                <label for="bgColorInput" data-i18n="bgColorLabel">Cor de fundo</label>
+                <span id="bgColorUsage" class="hint" data-i18n="bgColorUsage">Usada em: fundo da assinatura</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="row2">
-          <div class="field">
-            <label data-i18n="textColorLabel">Cor do texto</label>
-            <input id="textColorInput" type="color" value="#1f3b73">
-          </div>
-          <div class="field">
-            <label data-i18n="dividerColorLabel">Cor do divisor</label>
-            <input id="dividerColorInput" type="color" value="#1f3b73">
+        <div class="section">
+          <h3 data-i18n="layoutGroup">Layout</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label for="arrangementInput" data-i18n="arrangementLabel">Posição das logos</label>
+              <select id="arrangementInput">
+                <option value="logos-left" data-i18n-opt="arrangementLeft">À esquerda do texto</option>
+                <option value="logos-right" data-i18n-opt="arrangementRight">À direita do texto</option>
+                <option value="logos-top" data-i18n-opt="arrangementTop">Acima do texto</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="textAlignInput" data-i18n="textAlignLabel">Alinhamento do texto</label>
+              <select id="textAlignInput">
+                <option value="left" data-i18n-opt="alignLeft">Esquerda</option>
+                <option value="center" data-i18n-opt="alignCenter">Centro</option>
+                <option value="right" data-i18n-opt="alignRight">Direita</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="row2">
-          <div class="field">
-            <label data-i18n="accentColorLabel">Cor de destaque</label>
-            <input id="accentColorInput" type="color" value="#37b37e">
+        <div class="section">
+          <h3 data-i18n="dividerLegend">Barra divisória</h3>
+          <label class="checkline"><input type="checkbox" id="showDividerInput" checked> <span data-i18n="showDividerLabel">Mostrar barra</span></label>
+          <div class="grid-2">
+            <div class="field">
+              <label for="dividerStyleInput" data-i18n="dividerStyleLabel">Estilo</label>
+              <select id="dividerStyleInput">
+                <option value="solid" data-i18n-opt="dividerSolid">Contínua</option>
+                <option value="dashed" data-i18n-opt="dividerDashed">Tracejada</option>
+                <option value="dotted" data-i18n-opt="dividerDotted">Pontilhada</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dividerThicknessInput"><span data-i18n="dividerThicknessLabel">Espessura</span> <span id="dividerThicknessValue" class="value">2px</span></label>
+              <input id="dividerThicknessInput" type="range" min="1" max="12" step="1">
+            </div>
           </div>
-          <div class="field">
-            <label data-i18n="bgColorLabel">Cor de fundo</label>
-            <input id="bgColorInput" type="color" value="#f3f4f6">
-          </div>
+          <details class="fine-tune">
+            <summary data-i18n="fineTune">Ajuste fino</summary>
+            <div class="grid-2">
+              <div class="field">
+                <label for="dividerHeightModeInput" data-i18n="dividerLengthModeLabel">Comprimento</label>
+                <select id="dividerHeightModeInput">
+                  <option value="auto" data-i18n-opt="dividerLengthAuto">Acompanhar o conteúdo</option>
+                  <option value="fixed" data-i18n-opt="dividerLengthFixed">Fixo</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="dividerLengthInput"><span data-i18n="dividerLengthLabel">Tamanho fixo</span> <span id="dividerLengthValue" class="value">150px</span></label>
+                <input id="dividerLengthInput" type="range" min="10" max="600" step="1">
+              </div>
+              <div class="field">
+                <label for="gapBeforeInput"><span data-i18n="gapBeforeLabel">Espaço logos → barra</span> <span id="gapBeforeValue" class="value">30px</span></label>
+                <input id="gapBeforeInput" type="range" min="0" max="80" step="1">
+              </div>
+              <div class="field">
+                <label for="gapAfterInput"><span data-i18n="gapAfterLabel">Espaço barra → texto</span> <span id="gapAfterValue" class="value">18px</span></label>
+                <input id="gapAfterInput" type="range" min="0" max="80" step="1">
+              </div>
+              <div class="field">
+                <label for="paddingXInput"><span data-i18n="paddingXLabel">Margem lateral</span> <span id="paddingXValue" class="value">20px</span></label>
+                <input id="paddingXInput" type="range" min="0" max="80" step="1">
+              </div>
+              <div class="field">
+                <label for="paddingYInput"><span data-i18n="paddingYLabel">Margem vertical</span> <span id="paddingYValue" class="value">18px</span></label>
+                <input id="paddingYInput" type="range" min="0" max="80" step="1">
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" aria-labelledby="stageTitle">
+      <h2 id="stageTitle" class="visually-hidden" data-i18n="previewTitle">Prévia</h2>
+      <div class="stage-toolbar">
+        <div class="segmented" role="radiogroup" aria-labelledby="emailBackgroundLabel">
+          <span id="emailBackgroundLabel" class="segmented-title" data-i18n="emailBackgroundLabel">Fundo do e-mail</span>
+          <label><input type="radio" name="emailBackground" value="light" checked> <span data-i18n="emailBackgroundLight">Claro</span></label>
+          <label><input type="radio" name="emailBackground" value="dark"> <span data-i18n="emailBackgroundDark">Escuro</span></label>
+        </div>
+        <p id="signatureSize" class="size-readout" aria-live="polite"></p>
+      </div>
+
+      <div class="email-frame" id="emailFrame" data-background="light">
+        <div class="email-lines" aria-hidden="true">
+          <span></span><span></span><span class="short"></span>
+        </div>
+        <div class="preview-scale" id="previewScale">
+          <div class="preview" id="signaturePreview" aria-live="off"></div>
         </div>
       </div>
 
-      <div class="group">
-        <h3 data-i18n="exportGroup">Exportação</h3>
-
-        <div class="row2">
-          <div class="field">
-            <label data-i18n="formatLabel">Formato</label>
+      <div class="export-bar">
+        <div class="export-options">
+          <div class="field inline-field">
+            <label for="exportFormatInput" data-i18n="formatLabel">Formato</label>
             <select id="exportFormatInput">
               <option value="png" data-i18n-opt="optionPng">PNG</option>
               <option value="jpeg" data-i18n-opt="optionJpg">JPG</option>
+              <option value="webp" data-i18n-opt="optionWebp">WebP</option>
               <option value="svg" data-i18n-opt="optionSvg">SVG</option>
             </select>
           </div>
-          <div class="field">
-            <label data-i18n="scaleLabel">Escala / resolução</label>
+          <div class="field inline-field">
+            <label for="exportScaleInput" data-i18n="scaleLabel">Escala</label>
             <select id="exportScaleInput">
               <option value="1">1x</option>
               <option value="2" selected>2x</option>
               <option value="3">3x</option>
             </select>
           </div>
-        </div>
-
-        <div class="btns">
-          <button id="downloadImageBtn" class="primary" data-i18n="downloadImage">Baixar imagem</button>
-          <button id="downloadHtmlBtn" class="secondary" data-i18n="downloadHtml">Baixar HTML</button>
-          <button id="copyHtmlBtn" class="secondary" data-i18n="copyHtml">Copiar HTML</button>
-          <button id="resetBtn" class="ghost" data-i18n="reset">Resetar</button>
-        </div>
-
-        <div id="exportStatus"></div>
-        <p class="hint" data-i18n="hintText">
-          PNG é melhor para transparência e nitidez. JPG é mais leve. SVG é vetorial quando possível, mas imagens enviadas pelo usuário continuam embutidas.
-        </p>
-      </div>
-    </aside>
-
-    <section class="preview">
-      <table id="sigTable" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;">
-        <tr>
-          <td style="padding:18px 20px;">
-            <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
-              <tr>
-                <td id="logosCell" valign="middle" style="padding-right:16px;">
-                  <table cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td>
-                        <table id="logosHorizontal" cellpadding="0" cellspacing="0" border="0">
-                          <tr>
-                            <td id="mainLogoWrapH" valign="middle" style="padding-right:12px;">
-                              <img id="mainLogo" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
-                            </td>
-                            <td id="sideLogoWrapH" valign="middle" style="display:none;">
-                              <img id="sideLogo" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
-                            </td>
-                          </tr>
-                        </table>
-
-                        <table id="logosVertical" cellpadding="0" cellspacing="0" border="0" style="display:none;">
-                          <tr>
-                            <td id="mainLogoWrapV" style="padding-bottom:8px;">
-                              <img id="mainLogoClone" alt="Logo principal" data-i18n-alt="logoMainAlt" style="display:block;width:260px;height:auto;max-height:120px;border:0;">
-                            </td>
-                          </tr>
-                          <tr>
-                            <td id="sideLogoWrapV" style="display:none;">
-                              <img id="sideLogoClone" alt="Logo secundária" data-i18n-alt="logoSideAlt" style="display:block;width:120px;height:auto;max-height:120px;border:0;">
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-
-                <td id="dividerCell" valign="middle" style="padding:0 18px;">
-                  <div id="dividerBar" style="width:2px;height:150px;background:#1f3b73;line-height:0;font-size:0;">&nbsp;</div>
-                </td>
-
-                <td valign="middle">
-                  <div id="nameEl" style="font-size:46px;line-height:1;font-weight:800;color:#1f3b73;letter-spacing:-0.3px;">Nome Sobrenome</div>
-                  <div id="roleEl" style="font-size:22px;line-height:1.25;color:#1f3b73;padding-top:10px;">Cargo ou área</div>
-                  <div id="phoneEl" style="font-size:22px;line-height:1.2;color:#1f3b73;padding-top:6px;">Telefone: (00) 0000-0000</div>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </section>
-  </div>
-
-  <script type="module">
-    import { toPng } from 'https://esm.sh/html-to-image@1.11.3';
-
-    const translations = {
-      "pt-BR": {
-        languageLabel: "Idioma",
-        nameValue: "Nome Sobrenome",
-        roleValue: "Cargo ou área",
-        phoneValue: "+55 (00) 0000-0000",
-        showCountryCode: "Mostrar código do país",
-        title: "Gerador de assinatura",
-        paletteCorporate: "Corporativo",
-        paletteDark: "Escuro",
-        paletteBlue: "Azul",
-        paletteMinimal: "Minimal",
-        dataGroup: "Dados",
-        fontGroup: "Fonte",
-        logosGroup: "Logos",
-        colorsGroup: "Cores",
-        exportGroup: "Exportação",
-        nameLabel: "Nome",
-        roleLabel: "Cargo",
-        phoneLabel: "Telefone",
-        fontFamilyLabel: "Família da fonte",
-        showMainLogoCheck: "Mostrar logo principal",
-        showSideLogoCheck: "Mostrar logo secundária",
-        logoLayoutLabel: "Posicionamento das logos",
-        logoLayoutHorizontal: "Lado a lado",
-        logoLayoutVertical: "Empilhadas",
-        mainLogoWidth: "Largura logo principal",
-        sideLogoWidth: "Largura logo secundária",
-        mainLogoLabel: "Logo principal",
-        sideLogoLabel: "Logo secundária",
-        dropzoneText: "Arraste e solte a imagem aqui",
-        dropzoneOr: "ou selecione um arquivo:",
-        palettesLabel: "Paletas",
-        textColorLabel: "Cor do texto",
-        dividerColorLabel: "Cor do divisor",
-        accentColorLabel: "Cor de destaque",
-        bgColorLabel: "Cor de fundo",
-        formatLabel: "Formato",
-        scaleLabel: "Escala / resolução",
-        downloadImage: "Baixar imagem",
-        downloadHtml: "Baixar HTML",
-        copyHtml: "Copiar HTML",
-        reset: "Resetar",
-        hintText: "PNG é melhor para transparência e nitidez. JPG é mais leve. SVG é vetorial quando possível, mas imagens enviadas pelo usuário continuam embutidas.",
-        namePlaceholder: "Nome Sobrenome",
-        rolePlaceholder: "Cargo ou área",
-        phonePlaceholder: "(00) 0000-0000",
-        optionPng: "PNG",
-        optionJpg: "JPG",
-        optionSvg: "SVG",
-        logoMainAlt: "Logo principal",
-        logoSideAlt: "Logo secundária",
-        phonePrefix: "Telefone: ",
-        statusLogoLoaded: "Logo carregada com sucesso.",
-        statusCopied: "HTML copiado para a área de transferência.",
-        statusCopyFailed: "Falha ao copiar HTML.",
-        statusSvgDownloaded: "SVG baixado.",
-        statusImageDownloaded: "Imagem baixada",
-        statusImageFailed: "Não foi possível gerar a imagem.",
-        statusHtmlDownloaded: "HTML baixado."
-      },
-      "en": {
-        languageLabel: "Language",
-        nameValue: "John Doe",
-        roleValue: "Role or Department",
-        phoneValue: "+1 (555) 000-0000",
-        showCountryCode: "Show country code",
-        title: "Signature Generator",
-        paletteCorporate: "Corporate",
-        paletteDark: "Dark",
-        paletteBlue: "Blue",
-        paletteMinimal: "Minimal",
-        dataGroup: "Data",
-        fontGroup: "Font",
-        logosGroup: "Logos",
-        colorsGroup: "Colors",
-        exportGroup: "Export",
-        nameLabel: "Name",
-        roleLabel: "Role / Title",
-        phoneLabel: "Phone",
-        fontFamilyLabel: "Font Family",
-        showMainLogoCheck: "Show main logo",
-        showSideLogoCheck: "Show secondary logo",
-        logoLayoutLabel: "Logo Layout",
-        logoLayoutHorizontal: "Side by side",
-        logoLayoutVertical: "Stacked",
-        mainLogoWidth: "Main logo width",
-        sideLogoWidth: "Secondary logo width",
-        mainLogoLabel: "Main Logo",
-        sideLogoLabel: "Secondary Logo",
-        dropzoneText: "Drag and drop an image here",
-        dropzoneOr: "or select a file:",
-        palettesLabel: "Palettes",
-        textColorLabel: "Text color",
-        dividerColorLabel: "Divider color",
-        accentColorLabel: "Accent color",
-        bgColorLabel: "Background color",
-        formatLabel: "Format",
-        scaleLabel: "Scale / Resolution",
-        downloadImage: "Download image",
-        downloadHtml: "Download HTML",
-        copyHtml: "Copy HTML",
-        reset: "Reset",
-        hintText: "PNG is best for transparency and sharpness. JPG is lighter. SVG is vector when possible, but user-uploaded images remain embedded.",
-        namePlaceholder: "First Last",
-        rolePlaceholder: "Role or department",
-        phonePlaceholder: "(00) 0000-0000",
-        optionPng: "PNG",
-        optionJpg: "JPG",
-        optionSvg: "SVG",
-        logoMainAlt: "Main logo",
-        logoSideAlt: "Secondary logo",
-        phonePrefix: "Phone: ",
-        statusLogoLoaded: "Logo loaded successfully.",
-        statusCopied: "HTML copied to clipboard.",
-        statusCopyFailed: "Failed to copy HTML.",
-        statusSvgDownloaded: "SVG downloaded.",
-        statusImageDownloaded: "Image downloaded",
-        statusImageFailed: "Could not generate image.",
-        statusHtmlDownloaded: "HTML downloaded."
-      }
-    };
-
-    const langSelect = document.getElementById("langSelect");
-    const nameInput = document.getElementById("nameInput");
-    const roleInput = document.getElementById("roleInput");
-    const phoneInput = document.getElementById("phoneInput");
-    const fontFamilyInput = document.getElementById("fontFamilyInput");
-    const dirtyFields = new Set();
-    const showCountryCodeCheckbox = document.getElementById("showCountryCode");
-
-    const showMainLogoCheckbox = document.getElementById("showMainLogo");
-    const showSideLogoCheckbox = document.getElementById("showSideLogo");
-    const logoLayoutInput = document.getElementById("logoLayoutInput");
-    const mainLogoWidthInput = document.getElementById("mainLogoWidthInput");
-    const sideLogoWidthInput = document.getElementById("sideLogoWidthInput");
-    const mainSizeLabel = document.getElementById("mainSizeLabel");
-    const sideSizeLabel = document.getElementById("sideSizeLabel");
-
-    const mainLogoInput = document.getElementById("mainLogoInput");
-    const sideLogoInput = document.getElementById("sideLogoInput");
-    const mainDrop = document.getElementById("mainDrop");
-    const sideDrop = document.getElementById("sideDrop");
-
-    const textColorInput = document.getElementById("textColorInput");
-    const dividerColorInput = document.getElementById("dividerColorInput");
-    const accentColorInput = document.getElementById("accentColorInput");
-    const bgColorInput = document.getElementById("bgColorInput");
-    const paletteGrid = document.getElementById("paletteGrid");
-
-    const exportFormatInput = document.getElementById("exportFormatInput");
-    const exportScaleInput = document.getElementById("exportScaleInput");
-    const downloadImageBtn = document.getElementById("downloadImageBtn");
-    const downloadHtmlBtn = document.getElementById("downloadHtmlBtn");
-    const copyHtmlBtn = document.getElementById("copyHtmlBtn");
-    const resetBtn = document.getElementById("resetBtn");
-    const exportStatus = document.getElementById("exportStatus");
-
-    const sigTable = document.getElementById("sigTable");
-    const logosCell = document.getElementById("logosCell");
-    const dividerCell = document.getElementById("dividerCell");
-    const dividerBar = document.getElementById("dividerBar");
-    const nameEl = document.getElementById("nameEl");
-    const roleEl = document.getElementById("roleEl");
-    const phoneEl = document.getElementById("phoneEl");
-
-    const logosHorizontal = document.getElementById("logosHorizontal");
-    const logosVertical = document.getElementById("logosVertical");
-
-    const mainLogo = document.getElementById("mainLogo");
-    const sideLogo = document.getElementById("sideLogo");
-    const mainLogoClone = document.getElementById("mainLogoClone");
-    const sideLogoClone = document.getElementById("sideLogoClone");
-
-    const mainLogoWrapH = document.getElementById("mainLogoWrapH");
-    const sideLogoWrapH = document.getElementById("sideLogoWrapH");
-    const mainLogoWrapV = document.getElementById("mainLogoWrapV");
-    const sideLogoWrapV = document.getElementById("sideLogoWrapV");
-
-    const defaultMainLogo = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='720' height='220'><rect width='100%' height='100%' fill='transparent'/><rect x='30' y='40' width='180' height='140' rx='20' fill='%23dbe4f0'/><text x='245' y='130' font-family='Arial' font-size='54' font-weight='700' fill='%231f3b73'>Sua Marca</text></svg>`;
-    const defaultSideLogo = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='220'><rect width='100%' height='100%' fill='transparent'/><circle cx='110' cy='90' r='55' fill='%23d9f3e8'/><text x='45' y='185' font-family='Arial' font-size='32' font-weight='700' fill='%2337b37e'>Selo</text></svg>`;
-
-    const palettes = [
-      { name: "paletteCorporate", text: "#1f3b73", divider: "#1f3b73", accent: "#37b37e", bg: "#f3f4f6" },
-      { name: "paletteDark", text: "#1f2937", divider: "#111827", accent: "#10b981", bg: "#f3f4f6" },
-      { name: "paletteBlue", text: "#0f2d75", divider: "#0f2d75", accent: "#2f7cff", bg: "#f5f8ff" },
-      { name: "paletteMinimal", text: "#202124", divider: "#202124", accent: "#34a853", bg: "#ffffff" }
-    ];
-
-    function setStatus(statusText) {
-      exportStatus.textContent = statusText || "";
-    }
-
-    function applyLanguage() {
-      const language = langSelect.value;
-      document.documentElement.lang = language;
-      const text = translations[language];
-
-      const i18nElements = document.querySelectorAll("[data-i18n]");
-      for (const element of i18nElements) {
-        const key = element.getAttribute("data-i18n");
-        if (text[key] !== undefined) {
-          element.textContent = text[key];
-        }
-      }
-
-      const placeholderElements = document.querySelectorAll("[data-i18n-placeholder]");
-      for (const element of placeholderElements) {
-        const key = element.getAttribute("data-i18n-placeholder");
-        if (text[key] !== undefined) {
-          element.placeholder = text[key];
-        }
-      }
-
-      const optionElements = document.querySelectorAll("[data-i18n-opt]");
-      for (const element of optionElements) {
-        const key = element.getAttribute("data-i18n-opt");
-        if (text[key] !== undefined) {
-          element.textContent = text[key];
-        }
-      }
-
-      const altElements = document.querySelectorAll("[data-i18n-alt]");
-      for (const element of altElements) {
-        const key = element.getAttribute("data-i18n-alt");
-        if (text[key] !== undefined) {
-          element.alt = text[key];
-        }
-      }
-
-      const valueElements = document.querySelectorAll("[data-i18n-value]");
-      for (const element of valueElements) {
-        if (dirtyFields.has(element.id)) {
-          continue;
-        }
-        const key = element.getAttribute("data-i18n-value");
-        if (text[key] !== undefined) {
-          element.value = text[key];
-        }
-      }
-
-      applyText();
-      buildPalettes();
-    }
-
-    function detectBrowserLanguage() {
-      const browserLanguage = navigator.language || navigator.userLanguage || "";
-      if (browserLanguage.startsWith("en")) {
-        return "en";
-      }
-      return "pt-BR";
-    }
-
-    function buildPalettes() {
-      paletteGrid.innerHTML = "";
-      for (const palette of palettes) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "palette";
-        const paletteName = translations[langSelect.value][palette.name];
-        button.innerHTML = `
-          <div class="swatches">
-            <span class="sw" style="background:${palette.text}"></span>
-            <span class="sw" style="background:${palette.divider}"></span>
-            <span class="sw" style="background:${palette.accent}"></span>
-            <span class="sw" style="background:${palette.bg}"></span>
+          <div id="qualityField" class="field inline-field quality-field" hidden>
+            <label for="exportQualityInput"><span data-i18n="qualityLabel">Qualidade</span> <span id="qualityValueLabel" class="value">90%</span></label>
+            <input id="exportQualityInput" type="range" min="50" max="100" step="5" value="90">
           </div>
-          ${paletteName}
-        `;
-        button.addEventListener("click", function () {
-          textColorInput.value = palette.text;
-          dividerColorInput.value = palette.divider;
-          accentColorInput.value = palette.accent;
-          bgColorInput.value = palette.bg;
-          applyColors();
-        });
-        paletteGrid.appendChild(button);
-      }
-    }
+        </div>
+        <div class="export-actions">
+          <button id="downloadImageBtn" type="button" class="primary" data-i18n="downloadImage">Baixar imagem</button>
+          <button id="copyHtmlBtn" type="button" class="secondary" data-i18n="copyHtml">Copiar HTML</button>
+          <button id="downloadHtmlBtn" type="button" class="ghost" data-i18n="downloadHtml">Baixar HTML</button>
+        </div>
+      </div>
+      <p id="webpWarning" class="notice warning" data-i18n="webpWarning" hidden>WebP</p>
+      <div id="exportStatus" class="status" role="status" aria-live="polite"></div>
+      <details class="format-help">
+        <summary data-i18n="formatHelpSummary">Qual formato escolher?</summary>
+        <p class="hint" data-i18n="hintText">PNG</p>
+      </details>
+      <p class="hint autosave" data-i18n="autosaveHint">Salvo automaticamente</p>
+    </section>
+  </main>
 
-    function syncLogoSources() {
-      mainLogoClone.src = mainLogo.src;
-      sideLogoClone.src = sideLogo.src;
-    }
+  <dialog id="copyDialog" class="journey" aria-labelledby="journeyTitle">
+    <form method="dialog" class="journey-form">
+      <h2 id="journeyTitle" data-i18n="journeyTitle">Copiar HTML para o seu e-mail</h2>
 
-    function applyText() {
-      const language = langSelect.value;
-      const prefix = translations[language].phonePrefix;
-      nameEl.textContent = nameInput.value || "";
-      roleEl.textContent = roleInput.value || "";
-      let phoneText = phoneInput.value || "";
-      if (!showCountryCodeCheckbox.checked) {
-        phoneText = phoneText.replace(/^\+?\d+\s*/, "");
-      }
-      phoneEl.textContent = `${prefix}${phoneText}`;
-    }
+      <section data-step="client">
+        <p class="journey-question" data-i18n="journeyClientQuestion">Onde você vai usar a assinatura?</p>
+        <div class="journey-options" role="radiogroup">
+          <label class="checkline"><input type="radio" name="emailClient" value="gmail" checked> <span data-i18n="clientGmail">Gmail</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="outlookWeb"> <span data-i18n="clientOutlookWeb">Outlook na web</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="outlookDesktop"> <span data-i18n="clientOutlookDesktop">Outlook para Windows/Mac</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="appleMail"> <span data-i18n="clientAppleMail">Apple Mail</span></label>
+          <label class="checkline"><input type="radio" name="emailClient" value="other"> <span data-i18n="clientOther">Outro</span></label>
+        </div>
+        <div class="btns">
+          <button type="button" class="primary" data-action="next" data-i18n="journeyNext">Continuar</button>
+          <button type="button" class="ghost" data-action="close" data-i18n="journeyCancel">Cancelar</button>
+        </div>
+      </section>
 
-    function applyFont() {
-      const fontFamily = fontFamilyInput.value;
-      sigTable.style.fontFamily = fontFamily;
-      nameEl.style.fontFamily = fontFamily;
-      roleEl.style.fontFamily = fontFamily;
-      phoneEl.style.fontFamily = fontFamily;
-    }
+      <section data-step="hosted" hidden>
+        <p class="journey-question" data-i18n="journeyHostedQuestion">Sua logo está publicada num endereço público (https)?</p>
+        <p class="hint" data-i18n="journeyHostedHelp">Ajuda</p>
+        <div class="btns">
+          <button type="button" class="primary" data-action="hosted-yes" data-i18n="journeyYes">Sim, tenho a URL</button>
+          <button type="button" class="secondary" data-action="hosted-no" data-i18n="journeyNo">Não</button>
+          <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
+        </div>
+      </section>
 
-    function applyColors() {
-      sigTable.style.background = bgColorInput.value;
-      nameEl.style.color = textColorInput.value;
-      roleEl.style.color = textColorInput.value;
-      phoneEl.style.color = textColorInput.value;
-      dividerBar.style.background = dividerColorInput.value;
-      sigTable.setAttribute("data-accent", accentColorInput.value);
-    }
+      <section data-step="image" hidden>
+        <p class="journey-question" data-i18n="journeyImageTitle">Recomendamos exportar como imagem</p>
+        <p class="hint" data-i18n="journeyImageText">Texto</p>
+        <p class="hint" id="journeyImageInsert"></p>
+        <div class="btns">
+          <button type="button" class="primary" data-action="download-image" data-i18n="journeyDownloadImage">Baixar imagem</button>
+          <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
+        </div>
+      </section>
 
-    function applyLogoSizes() {
-      const mainWidth = parseInt(mainLogoWidthInput.value, 10);
-      const sideWidth = parseInt(sideLogoWidthInput.value, 10);
+      <section data-step="urls" hidden>
+        <div class="field" id="mainLogoUrlField">
+          <label for="mainLogoUrlInput" data-i18n="journeyUrlMain">URL da logo principal</label>
+          <input id="mainLogoUrlInput" type="url" inputmode="url" placeholder="https://" autocomplete="url">
+          <span class="field-error" id="mainLogoUrlError" role="alert"></span>
+        </div>
+        <div class="field" id="sideLogoUrlField">
+          <label for="sideLogoUrlInput" data-i18n="journeyUrlSide">URL da logo secundária</label>
+          <input id="sideLogoUrlInput" type="url" inputmode="url" placeholder="https://" autocomplete="url">
+          <span class="field-error" id="sideLogoUrlError" role="alert"></span>
+        </div>
+        <p class="hint" data-i18n="journeyAdjustedLogoHint">Logo ajustada</p>
+        <div class="btns">
+          <button type="button" class="ghost small" data-action="download-logo-main" data-i18n="journeyDownloadMainLogo">Baixar logo principal ajustada</button>
+          <button type="button" class="ghost small" data-action="download-logo-side" data-i18n="journeyDownloadSideLogo">Baixar logo secundária ajustada</button>
+        </div>
+        <div class="btns">
+          <button type="button" class="primary" data-action="test-and-copy" data-i18n="journeyTestAndCopy">Testar e copiar</button>
+          <button type="button" class="ghost" data-action="back" data-i18n="journeyBack">Voltar</button>
+        </div>
+      </section>
 
-      mainSizeLabel.textContent = `${mainWidth}px`;
-      sideSizeLabel.textContent = `${sideWidth}px`;
+      <section data-step="done" hidden>
+        <p class="journey-question" data-i18n="journeyCopiedTitle">Assinatura copiada</p>
+        <p class="hint" id="journeyPasteInstructions"></p>
+        <p class="hint warning" data-i18n="journeyServerWarning">Aviso</p>
+        <div class="btns">
+          <button type="button" class="primary" data-action="close" data-i18n="journeyClose">Fechar</button>
+        </div>
+      </section>
 
-      for (const image of [mainLogo, mainLogoClone]) {
-        image.style.width = `${mainWidth}px`;
-        image.style.height = "auto";
-      }
+      <p class="field-error" id="journeyError" role="alert"></p>
+    </form>
+  </dialog>
 
-      for (const image of [sideLogo, sideLogoClone]) {
-        image.style.width = `${sideWidth}px`;
-        image.style.height = "auto";
-      }
-    }
+  <dialog id="cropDialog" class="journey crop-dialog" aria-labelledby="cropTitle">
+    <h2 id="cropTitle" data-i18n="cropTitle">Cortar imagem</h2>
+    <p class="hint" data-i18n="cropHint">Arraste a seleção e os cantos para escolher a parte da imagem que vai na assinatura.</p>
+    <div class="crop-aspects" role="group" aria-labelledby="cropAspectLabel">
+      <span id="cropAspectLabel" class="field-title" data-i18n="cropAspectLabel">Proporção</span>
+      <button type="button" class="ghost small" data-aspect="free" data-i18n="cropAspectFree" aria-pressed="true">Livre</button>
+      <button type="button" class="ghost small" data-aspect="area" data-i18n="cropAspectArea" aria-pressed="false">Igual à área</button>
+      <button type="button" class="ghost small" data-aspect="1" aria-pressed="false">1:1</button>
+      <button type="button" class="ghost small" data-aspect="1.3333" aria-pressed="false">4:3</button>
+      <button type="button" class="ghost small" data-aspect="1.7778" aria-pressed="false">16:9</button>
+    </div>
+    <div id="cropArea" class="crop-area"></div>
+    <div class="btns">
+      <button id="cropApplyBtn" type="button" class="primary" data-i18n="cropApply">Aplicar corte</button>
+      <button id="cropCancelBtn" type="button" class="ghost" data-i18n="journeyCancel">Cancelar</button>
+    </div>
+  </dialog>
 
-    function applyLogosVisibilityAndLayout() {
-      const hasMain = showMainLogoCheckbox.checked;
-      const hasSide = showSideLogoCheckbox.checked;
-      const hasAny = hasMain || hasSide;
-      const vertical = logoLayoutInput.value === "vertical";
-
-      logosCell.style.display = hasAny ? "" : "none";
-      dividerCell.style.display = hasAny ? "" : "none";
-
-      logosHorizontal.style.display = vertical ? "none" : "";
-      logosVertical.style.display = vertical ? "" : "none";
-
-      mainLogoWrapH.style.display = hasMain ? "" : "none";
-      sideLogoWrapH.style.display = hasSide ? "" : "none";
-      mainLogoWrapV.style.display = hasMain ? "" : "none";
-      sideLogoWrapV.style.display = hasSide ? "" : "none";
-
-      mainLogoWrapH.style.paddingRight = (hasMain && hasSide) ? "12px" : "0";
-      mainLogoWrapV.style.paddingBottom = (hasMain && hasSide) ? "8px" : "0";
-    }
-
-    function readAsDataURL(file) {
-      return new Promise(function (resolve, reject) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          resolve(event.target.result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function setLogoFromFile(file, targetType) {
-      if (!file || !file.type.startsWith("image/")) {
-        return;
-      }
-      const data = await readAsDataURL(file);
-
-      if (targetType === "main") {
-        mainLogo.src = data;
-      } else {
-        sideLogo.src = data;
-      }
-
-      syncLogoSources();
-      applyLogoSizes();
-      applyLogosVisibilityAndLayout();
-      setStatus(translations[langSelect.value].statusLogoLoaded);
-    }
-
-    function wireDropzone(zone, input, targetType) {
-      const dragEvents = ["dragenter", "dragover"];
-      for (const eventType of dragEvents) {
-        zone.addEventListener(eventType, function (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          zone.classList.add("dragover");
-        });
-      }
-
-      const leaveEvents = ["dragleave", "drop"];
-      for (const eventType of leaveEvents) {
-        zone.addEventListener(eventType, function (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          zone.classList.remove("dragover");
-        });
-      }
-
-      zone.addEventListener("drop", async function (event) {
-        const file = event.dataTransfer.files && event.dataTransfer.files[0];
-        if (file) {
-          await setLogoFromFile(file, targetType);
-        }
-      });
-
-      input.addEventListener("change", async function (event) {
-        const file = event.target.files && event.target.files[0];
-        if (file) {
-          await setLogoFromFile(file, targetType);
-        }
-      });
-    }
-
-    function inlineForExport(root) {
-      root.style.fontFamily = fontFamilyInput.value;
-      root.style.background = bgColorInput.value;
-      root.style.minWidth = "0";
-
-      const nameElement = root.querySelector("#nameEl");
-      const roleElement = root.querySelector("#roleEl");
-      const phoneElement = root.querySelector("#phoneEl");
-      const dividerElement = root.querySelector("#dividerBar");
-
-      if (nameElement) {
-        nameElement.style.color = textColorInput.value;
-        nameElement.style.fontFamily = fontFamilyInput.value;
-      }
-      if (roleElement) {
-        roleElement.style.color = textColorInput.value;
-        roleElement.style.fontFamily = fontFamilyInput.value;
-      }
-      if (phoneElement) {
-        phoneElement.style.color = textColorInput.value;
-        phoneElement.style.fontFamily = fontFamilyInput.value;
-      }
-      if (dividerElement) {
-        dividerElement.style.background = dividerColorInput.value;
-      }
-    }
-
-    async function copyHtml() {
-      const clone = sigTable.cloneNode(true);
-      inlineForExport(clone);
-      await navigator.clipboard.writeText(clone.outerHTML);
-      setStatus(translations[langSelect.value].statusCopied);
-    }
-
-    function downloadBlob(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(function () {
-        URL.revokeObjectURL(url);
-      }, 500);
-    }
-
-    function getSignatureHtmlForSvg() {
-      const clone = sigTable.cloneNode(true);
-      inlineForExport(clone);
-      return clone.outerHTML;
-    }
-
-    function getPreviewDimensions() {
-      const rect = sigTable.getBoundingClientRect();
-      return {
-        width: Math.ceil(rect.width),
-        height: Math.ceil(rect.height)
-      };
-    }
-
-    async function exportAsSvg() {
-      const dimensions = getPreviewDimensions();
-      const htmlContent = getSignatureHtmlForSvg();
-
-      const svgContent = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
-  <foreignObject width="100%" height="100%">
-    <div xmlns="http://www.w3.org/1999/xhtml">${htmlContent}</div>
-  </foreignObject>
-</svg>`.trim();
-
-      downloadBlob(new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" }), "assinatura.svg");
-      setStatus(translations[langSelect.value].statusSvgDownloaded);
-    }
-
-    function loadImage(src) {
-      return new Promise(function (resolve, reject) {
-        const image = new Image();
-        image.onload = function () {
-          resolve(image);
-        };
-        image.onerror = reject;
-        image.src = src;
-      });
-    }
-
-    async function exportAsRaster(type) {
-      const scale = parseInt(exportScaleInput.value, 10);
-      const dimensions = getPreviewDimensions();
-      const htmlContent = getSignatureHtmlForSvg();
-
-      const svgContent = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width * scale}" height="${dimensions.height * scale}">
-  <foreignObject width="100%" height="100%" transform="scale(${scale})">
-    <div xmlns="http://www.w3.org/1999/xhtml">${htmlContent}</div>
-  </foreignObject>
-</svg>`.trim();
-
-      const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
-      const svgUrl = URL.createObjectURL(svgBlob);
-
-      try {
-        const loadedImage = await loadImage(svgUrl);
-        const canvas = document.createElement("canvas");
-        canvas.width = dimensions.width * scale;
-        canvas.height = dimensions.height * scale;
-
-        const context = canvas.getContext("2d");
-
-        if (type === "jpeg") {
-          context.fillStyle = bgColorInput.value;
-          context.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        context.drawImage(loadedImage, 0, 0, canvas.width, canvas.height);
-
-        const mimeType = type === "jpeg" ? "image/jpeg" : "image/png";
-        const quality = type === "jpeg" ? 0.95 : undefined;
-
-        canvas.toBlob(function (imageBlob) {
-          if (!imageBlob) {
-            setStatus(translations[langSelect.value].statusImageFailed);
-            return;
-          }
-          downloadBlob(imageBlob, type === "jpeg" ? "assinatura.jpg" : "assinatura.png");
-          setStatus(`${translations[langSelect.value].statusImageDownloaded} em ${scale}x.`);
-        }, mimeType, quality);
-      } finally {
-        setTimeout(function () {
-          URL.revokeObjectURL(svgUrl);
-        }, 500);
-      }
-    }
-
-    async function downloadImage() {
-      const signatureTable = document.getElementById("sigTable");
-      const dataUrl = await toPng(signatureTable, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: "#f3f4f6"
-      });
-
-      const anchor = document.createElement("a");
-      anchor.href = dataUrl;
-      anchor.download = "assinatura.png";
-      anchor.click();
-    }
-
-    function downloadHtml() {
-      const clone = sigTable.cloneNode(true);
-      inlineForExport(clone);
-
-      const htmlContent = `<!doctype html>
-<html lang="${langSelect.value}">
-<head>
-  <meta charset="utf-8">
-  <title>Assinatura</title>
-</head>
-<body>
-${clone.outerHTML}
-</body>
-</html>`;
-
-      downloadBlob(new Blob([htmlContent], { type: "text/html;charset=utf-8" }), "assinatura.html");
-      setStatus(translations[langSelect.value].statusHtmlDownloaded);
-    }
-
-    function resetAll() {
-      dirtyFields.clear();
-      nameInput.value = "Nome Sobrenome";
-      roleInput.value = "Cargo ou área";
-      phoneInput.value = "+55 (00) 0000-0000";
-      fontFamilyInput.value = "Arial,Helvetica,sans-serif";
-
-      showMainLogoCheckbox.checked = true;
-      showSideLogoCheckbox.checked = false;
-      showCountryCodeCheckbox.checked = true;
-      logoLayoutInput.value = "horizontal";
-      mainLogoWidthInput.value = 260;
-      sideLogoWidthInput.value = 120;
-
-      textColorInput.value = "#1f3b73";
-      dividerColorInput.value = "#1f3b73";
-      accentColorInput.value = "#37b37e";
-      bgColorInput.value = "#f3f4f6";
-
-      mainLogo.src = defaultMainLogo;
-      sideLogo.src = defaultSideLogo;
-      syncLogoSources();
-
-      mainLogoInput.value = "";
-      sideLogoInput.value = "";
-
-      applyText();
-      applyFont();
-      applyColors();
-      applyLogoSizes();
-      applyLogosVisibilityAndLayout();
-      setStatus("");
-    }
-
-    for (const element of [nameInput, roleInput, phoneInput]) {
-      element.addEventListener("input", function () {
-        dirtyFields.add(element.id);
-        applyText();
-      });
-    }
-    fontFamilyInput.addEventListener("change", applyFont);
-    for (const element of [textColorInput, dividerColorInput, accentColorInput, bgColorInput]) {
-      element.addEventListener("input", applyColors);
-    }
-    for (const element of [showMainLogoCheckbox, showSideLogoCheckbox]) {
-      element.addEventListener("change", applyLogosVisibilityAndLayout);
-    }
-    showCountryCodeCheckbox.addEventListener("change", applyText);
-    logoLayoutInput.addEventListener("change", applyLogosVisibilityAndLayout);
-    mainLogoWidthInput.addEventListener("input", applyLogoSizes);
-    sideLogoWidthInput.addEventListener("input", applyLogoSizes);
-
-    copyHtmlBtn.addEventListener("click", async function () {
-      try {
-        await copyHtml();
-      } catch {
-        setStatus(translations[langSelect.value].statusCopyFailed);
-      }
-    });
-
-    downloadHtmlBtn.addEventListener("click", downloadHtml);
-    downloadImageBtn.addEventListener("click", downloadImage);
-    resetBtn.addEventListener("click", resetAll);
-
-    langSelect.addEventListener("change", applyLanguage);
-
-    wireDropzone(mainDrop, mainLogoInput, "main");
-    wireDropzone(sideDrop, sideLogoInput, "side");
-
-    langSelect.value = detectBrowserLanguage();
-    buildPalettes();
-    resetAll();
-    applyLanguage();
-  </script>
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

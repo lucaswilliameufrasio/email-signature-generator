@@ -1,0 +1,23 @@
+{
+  "skill_name": "github-gitea-actions",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a GitHub Actions CI workflow for this repository. It should check out the code, set up the current stable Node.js LTS, install dependencies with npm ci, and run npm test. Keep it safe for pull requests.",
+      "expected_output": "The workflow uses currently verified, supported actions rather than remembered sample versions; records official source and lookup date for each action; uses the repository's pinning policy or verified immutable SHA references; applies least-privilege token permissions and safe PR handling; and identifies validation performed.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "We run Gitea Actions on our own instance. Add a CI workflow that checks out a Rust project, installs the stable toolchain, and runs cargo test. Please make sure the actions are up to date.",
+      "expected_output": "The response checks current upstream releases and Gitea compatibility documentation, asks for or verifies relevant Gitea/act_runner versions when needed, does not blindly assume GitHub Actions compatibility, and reports the selected references with source links and lookup date.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Audit and update this workflow; it was copied from an old tutorial:\n\nname: CI\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v3\n        with:\n          node-version: 20\n      - run: npm ci\n      - run: npm test\n      - uses: actions/upload-artifact@v3\n        with:\n          name: coverage\n          path: coverage/\n\nCheck every action, don't just assume the versions are current, and explain what you changed.",
+      "expected_output": "The response freshly checks upstream stable releases and security information for every action in scope, identifies all stale references rather than fixing only checkout, chooses compatible updated refs according to the repository pinning policy, preserves the project's existing Node.js runtime unless an upgrade is requested or justified and explained, cites official sources and lookup dates, and validates the resulting workflow where possible.",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: failed-redesign-music-app
+expected_outcome: |
+  Audits the current screens and the rejected redesign before deciding,
+  researches with sources and ethical limits, then records concept, tokens with
+  measured contrast, directives and a checklist in the repository's docs
+  convention and decision log.
